@@ -30,7 +30,7 @@ public class ParameterizedValidatorWrapper implements ValidatorWrapper
 	@Nonnull
 	public String getValidationName(@Nonnull Method method)
 	{
-		String methodBeingExecuted = validator.getClass().getCanonicalName() + "." + method.getName();
+		String methodBeingExecuted = determineMethodName(method);
 
 		for (Method staticMethod : validator.getClass().getMethods())
 		{
@@ -45,5 +45,30 @@ public class ParameterizedValidatorWrapper implements ValidatorWrapper
 		}
 
 		return methodBeingExecuted;
+	}
+
+	@Nonnull
+	@Override
+	public String getUniqueIdentifier(@Nonnull Method method)
+	{
+		String methodBeingExecuted = determineMethodName(method);
+
+		for (Method staticMethod : validator.getClass().getMethods())
+		{
+			final Parameterized parameterized = staticMethod.getAnnotation(Parameterized.class);
+			if (parameterized != null && Modifier.isStatic(staticMethod.getModifiers()))
+			{
+				methodBeingExecuted = methodBeingExecuted + "." + parameterized.uniqueIdentifier();
+				methodBeingExecuted = MessageFormat.format(methodBeingExecuted, constructorArguments);
+				break;
+			}
+		}
+		return methodBeingExecuted;
+	}
+
+	@Nonnull
+	private String determineMethodName(@Nonnull Method method)
+	{
+		return validator.getClass().getSimpleName() + "." + method.getName();
 	}
 }

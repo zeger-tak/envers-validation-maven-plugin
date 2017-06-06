@@ -23,32 +23,32 @@ import org.tak.zeger.enversvalidationplugin.utils.PropertyUtils;
 public class EnversValidationMojo extends AbstractMojo
 {
 	private static final String PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS = "org.tak.zeger.enversvalidationplugin.validate";
-	
+
 	@Parameter(property = "connectionPropertyFile", required = true, readonly = true)
 	private File connectionPropertyFile;
 
 	@Parameter(property = "whiteListPropertyFile", required = true, readonly = true)
 	private File whiteListPropertyFile;
 
-	@Parameter(property = "auditTablePostFix", readonly = true, defaultValue = "_AUD")
-	private String auditTablePostFix;
+	@Parameter(property = "packageToScanForValidators", readonly = true)
+	private List<String> packageToScanForValidators;
 
-	@Parameter(property = "packagesToScanForValidators", readonly = true)
-	private List<String> packagesToScanForValidators;
+	@Parameter(property = "ignorable", readonly = true)
+	private List<String> ignorable;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException
 	{
 		final ConnectionProviderInstance connectionProvider = PropertyUtils.getConnectionProperties(connectionPropertyFile);
-		final Map<String, String> whiteList = PropertyUtils.getWhiteList(whiteListPropertyFile, auditTablePostFix);
+		final Map<String, String> whiteList = PropertyUtils.getWhiteList(whiteListPropertyFile, connectionProvider.getAuditTablePostFix());
 
-		final Set<String> listOfAuditTablesInDatabase = getListOfAuditTablesInDatabase(connectionProvider, auditTablePostFix);
-
+		final Set<String> listOfAuditTablesInDatabase = getListOfAuditTablesInDatabase(connectionProvider);
+		final Config config = new Config(packageToScanForValidators, whiteList, ignorable);
 		try
 		{
-			packagesToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
-			final ValidationExecutor validationExecutor = new ValidationExecutor(getLog(), packagesToScanForValidators, connectionProvider);
-			validationExecutor.executeValidations(whiteList, listOfAuditTablesInDatabase);
+			packageToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
+			final ValidationExecutor validationExecutor = new ValidationExecutor(getLog(), config, connectionProvider);
+			validationExecutor.executeValidations(listOfAuditTablesInDatabase);
 		}
 		catch (Exception e)
 		{
@@ -57,16 +57,16 @@ public class EnversValidationMojo extends AbstractMojo
 	}
 
 	@Nonnull
-	private Set<String> getListOfAuditTablesInDatabase(ConnectionProviderInstance connectionProvider, @Nonnull String auditTablePostFix)
+	private Set<String> getListOfAuditTablesInDatabase(ConnectionProviderInstance connectionProvider)
 	{
 		final String query;
 		if (connectionProvider.isOracle())
 		{
-			query = "select TABLE_NAME from USER_TABLES where TABLE_NAME like '%" + auditTablePostFix + "'";
+			query = "select TABLE_NAME from USER_TABLES where TABLE_NAME like '%" + connectionProvider.getAuditTablePostFix() + "'";
 		}
 		else if (connectionProvider.isPostgreSQL())
 		{
-			query = "select upper(table_name) table_name from information_schema.tables where UPPER(TABLE_NAME) like '%" + auditTablePostFix + "'";
+			query = "select upper(table_name) table_name from information_schema.tables where UPPER(TABLE_NAME) like '%" + connectionProvider.getAuditTablePostFix() + "'";
 		}
 		else
 		{

@@ -24,8 +24,21 @@ public final class PropertyUtils
 	@Nonnull
 	public static ConnectionProviderInstance getConnectionProperties(@Nonnull File file) throws MojoFailureException
 	{
-		Properties connectionPropertiesInFile = getPropertiesFromFile(file);
+		final Properties connectionPropertiesInFile = getPropertiesFromFile(file);
+		final ConnectionProviderInstance connectionProvider = createConnectionProvider(connectionPropertiesInFile);
 
+		final String auditTablePostFixPropertyKey = "auditTablePostFix";
+		final String auditTablePostFix = connectionPropertiesInFile.getProperty(auditTablePostFixPropertyKey);
+		if (StringUtils.isNotBlank(auditTablePostFix))
+		{
+			connectionProvider.setAuditTablePostFix(auditTablePostFix);
+		}
+		return connectionProvider;
+	}
+
+	@Nonnull
+	private static ConnectionProviderInstance createConnectionProvider(@Nonnull Properties connectionPropertiesInFile) throws MojoFailureException
+	{
 		final String usernamePropertyKey = "username";
 		final String passwordPropertyKey = "password";
 		final String driverClassPropertyKey = "driver";

@@ -22,6 +22,13 @@ public class SingleValidatorWrapper implements ValidatorWrapper
 	@Nonnull
 	public String getValidationName(@Nonnull Method method)
 	{
-		return validator.getClass().getCanonicalName() + "." + method.getName();
+		return validator.getClass().getSimpleName() + "." + method.getName();
+	}
+
+	@Nonnull
+	@Override
+	public String getUniqueIdentifier(@Nonnull Method method)
+	{
+		return getValidationName(method);
 	}
 }

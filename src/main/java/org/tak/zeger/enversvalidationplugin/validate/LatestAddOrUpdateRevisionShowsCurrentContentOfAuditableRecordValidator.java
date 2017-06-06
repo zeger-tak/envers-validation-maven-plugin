@@ -100,7 +100,7 @@ public class LatestAddOrUpdateRevisionShowsCurrentContentOfAuditableRecordValida
 		}
 	}
 
-	@Parameterized(name = "{index}: auditTableName: {0}")
+	@Parameterized(name = "{index}: auditTableName: {0}", uniqueIdentifier = "{0}")
 	public static Collection<Object[]> generateData(@ConnectionProvider ConnectionProviderInstance connectionProvider, @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
 	{
 		final List<Object[]> testData = new ArrayList<>();

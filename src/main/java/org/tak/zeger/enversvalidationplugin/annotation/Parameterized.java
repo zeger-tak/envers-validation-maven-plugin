@@ -12,4 +12,6 @@ import javax.annotation.Nonnull;
 public @interface Parameterized
 {
 	@Nonnull String name() default "{index}";
+
+	@Nonnull String uniqueIdentifier() default "{index}";
 }

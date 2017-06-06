@@ -12,6 +12,7 @@ import org.tak.zeger.enversvalidationplugin.exceptions.DatabaseNotSupportedExcep
 
 public class ConnectionProviderInstance
 {
+	private String auditTablePostFix = "_AUD";
 	private final String driverClass;
 	private final String connectionUrl;
 	private final String username;
@@ -85,6 +86,17 @@ public class ConnectionProviderInstance
 	public boolean isPostgreSQL()
 	{
 		return driverClass.equals("org.postgresql.Driver");
+	}
+
+	@Nonnull
+	public String getAuditTablePostFix()
+	{
+		return auditTablePostFix;
+	}
+
+	public void setAuditTablePostFix(@Nonnull String auditTablePostFix)
+	{
+		this.auditTablePostFix = auditTablePostFix;
 	}
 
 	@Override

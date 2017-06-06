@@ -11,4 +11,7 @@ public interface ValidatorWrapper
 
 	@Nonnull
 	String getValidationName(@Nonnull Method method);
+
+	@Nonnull
+	String getUniqueIdentifier(@Nonnull Method method);
 }
