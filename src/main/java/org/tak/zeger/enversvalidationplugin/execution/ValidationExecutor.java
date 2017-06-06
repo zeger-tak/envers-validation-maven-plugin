@@ -1,6 +1,7 @@
 package org.tak.zeger.enversvalidationplugin.execution;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,17 +15,24 @@ import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
+import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 import org.tak.zeger.enversvalidationplugin.utils.ReflectionUtils;
-import org.tak.zeger.enversvalidationplugin.utils.ValidationInvocator;
 
+/**
+ * This class is NOT thread-safe by design, so do not call 2 public methods from different contexts.
+ */
 public class ValidationExecutor
 {
 	private final Log log;
 	private final List<String> packagesToScanForValidators;
 	private final ConnectionProviderInstance connectionProvider;
+
+	// Results
+	private final List<String> validatorsExecutionFailed = new ArrayList<>();
+	private int failedTests = 0;
 
 	public ValidationExecutor(@Nonnull Log log, @Nonnull List<String> packagesToScanForValidators, @Nonnull ConnectionProviderInstance connectionProvider)
 	{
@@ -35,45 +43,85 @@ public class ValidationExecutor
 
 	public void executeValidations(@Nonnull Map<String, String> whiteList, @Nonnull Set<String> auditTablesInDatabase)
 	{
+		clearResults();
+
 		Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ReflectionUtils.getPackages(packagesToScanForValidators)).setScanners(new SubTypesScanner(), new FieldAnnotationsScanner(), new TypeAnnotationsScanner()));
 		Set<Class<?>> allValidators = reflections.getTypesAnnotatedWith(ValidationType.class);
 
-		boolean exceptionsEncountered = false;
-		final List<String> validatorsNotExecuted = new ArrayList<>(allValidators.size());
 		for (Class<?> validatorClass : allValidators)
 		{
 			try
 			{
-				final boolean result = ValidationInvocator.invokeValidationMethods(log, validatorClass, connectionProvider, whiteList, auditTablesInDatabase);
-				if (result)
-				{
-					exceptionsEncountered = true;
-				}
+				invokeValidationValidators(log, validatorClass, connectionProvider, whiteList, auditTablesInDatabase);
 			}
 			catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e)
 			{
-				validatorsNotExecuted.add(validatorClass.getCanonicalName());
+				validatorsExecutionFailed.add(validatorClass.getCanonicalName());
 			}
 		}
-
-		validateResult(exceptionsEncountered, validatorsNotExecuted);
+		validateResult();
 	}
 
-	private static void validateResult(boolean exceptionsEncountered, List<String> validatorsNotExecuted)
+	private void clearResults()
+	{
+		failedTests = 0;
+		validatorsExecutionFailed.clear();
+	}
+
+	private void invokeValidationValidators(@Nonnull Log log, @Nonnull Class<?> validatorClass, @Nonnull ConnectionProviderInstance connectionProvider, @Nonnull Map<String, String> whiteList, @Nonnull Set<String> auditTablesInDatabase) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+	{
+		final ValidatorInstanceCreator validatorInstanceCreator = new ValidatorInstanceCreator(connectionProvider, whiteList, auditTablesInDatabase, validatorClass);
+		final List<ValidatorWrapper> validatorInstances = validatorInstanceCreator.getValidators();
+
+		for (ValidatorWrapper wrapper : validatorInstances)
+		{
+			Object validatorInstance = wrapper.getValidator();
+			Method[] methods = validatorClass.getMethods();
+			for (Method method : methods)
+			{
+				log.debug("Started with " + wrapper.getValidationName(method));
+				if (method.isAnnotationPresent(Validate.class))
+				{
+					final String validationName = wrapper.getValidationName(method);
+					try
+					{
+						method.invoke(validatorInstance);
+						log.info(validationName + " executed sucessfully.");
+					}
+					catch (IllegalAccessException | InvocationTargetException | ValidationException e)
+					{
+						if (e.getCause() instanceof ValidationException)
+						{
+							log.error(validationName + " failed, due to: " + e.getCause().getMessage(), e.getCause());
+						}
+						else
+						{
+							log.error(validationName + " failed, due to: " + e.getMessage(), e);
+						}
+						failedTests++;
+					}
+				}
+				log.debug("Finished with " + wrapper.getValidationName(method));
+			}
+		}
+	}
+
+	private void validateResult()
 	{
 		final StringBuilder exceptionMessage = new StringBuilder();
-		if (exceptionsEncountered)
+		if (failedTests > 0)
 		{
-			exceptionMessage.append("Some of the validations failed, see log above for details.");
+			exceptionMessage.append(failedTests);
+			exceptionMessage.append(" validations failed, see log above for details.");
 		}
-		if (!validatorsNotExecuted.isEmpty())
+		if (!validatorsExecutionFailed.isEmpty())
 		{
-			if (exceptionsEncountered)
+			if (failedTests > 0)
 			{
 				exceptionMessage.append(" ");
 			}
 			exceptionMessage.append("The following validators were not executed: ");
-			exceptionMessage.append(validatorsNotExecuted);
+			exceptionMessage.append(validatorsExecutionFailed);
 		}
 
 		if (exceptionMessage.length() > 0)

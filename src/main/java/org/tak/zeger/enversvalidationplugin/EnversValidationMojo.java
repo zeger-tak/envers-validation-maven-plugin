@@ -1,7 +1,6 @@
 package org.tak.zeger.enversvalidationplugin;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,8 @@ import org.tak.zeger.enversvalidationplugin.utils.PropertyUtils;
 @Mojo(name = "validate")
 public class EnversValidationMojo extends AbstractMojo
 {
+	private static final String PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS = "org.tak.zeger.enversvalidationplugin.validate";
+	
 	@Parameter(property = "connectionPropertyFile", required = true, readonly = true)
 	private File connectionPropertyFile;
 
@@ -31,6 +32,9 @@ public class EnversValidationMojo extends AbstractMojo
 
 	@Parameter(property = "auditTablePostFix", readonly = true, defaultValue = "_AUD")
 	private String auditTablePostFix;
+
+	@Parameter(property = "packagesToScanForValidators", readonly = true)
+	private List<String> packagesToScanForValidators;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException
@@ -42,8 +46,8 @@ public class EnversValidationMojo extends AbstractMojo
 
 		try
 		{
-			final List<String> packagesToScanForExecutors = Collections.singletonList("org.tak.zeger.enversvalidationplugin.validate");
-			final ValidationExecutor validationExecutor = new ValidationExecutor(getLog(), packagesToScanForExecutors, connectionProvider);
+			packagesToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
+			final ValidationExecutor validationExecutor = new ValidationExecutor(getLog(), packagesToScanForValidators, connectionProvider);
 			validationExecutor.executeValidations(whiteList, listOfAuditTablesInDatabase);
 		}
 		catch (Exception e)
