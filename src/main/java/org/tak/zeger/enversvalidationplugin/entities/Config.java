@@ -1,4 +1,4 @@
-package org.tak.zeger.enversvalidationplugin;
+package org.tak.zeger.enversvalidationplugin.entities;
 
 import java.lang.reflect.Method;
 import java.util.List;

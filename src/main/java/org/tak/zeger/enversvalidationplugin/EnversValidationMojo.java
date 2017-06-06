@@ -15,6 +15,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.dbunit.database.CachedResultSetTable;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.Config;
 import org.tak.zeger.enversvalidationplugin.exceptions.DatabaseNotSupportedException;
 import org.tak.zeger.enversvalidationplugin.execution.ValidationExecutor;
 import org.tak.zeger.enversvalidationplugin.utils.PropertyUtils;
