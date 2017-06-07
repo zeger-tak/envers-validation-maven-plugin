@@ -15,7 +15,6 @@ import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITableMetaData;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
-import org.tak.zeger.enversvalidationplugin.exceptions.DatabaseNotSupportedException;
 
 public final class DatabaseUtils
 {
@@ -39,10 +38,7 @@ public final class DatabaseUtils
 			}
 
 			final String id = getPrimaryIdentifierAsString(recordsInTable, rowIndex, primaryIdentifierColumnNames);
-			if (recordsInTableGroupedById.get(id) == null)
-			{
-				recordsInTableGroupedById.put(id, new ArrayList<TableRow>());
-			}
+			recordsInTableGroupedById.computeIfAbsent(id, k -> new ArrayList<>());
 
 			final List<TableRow> tableRows = recordsInTableGroupedById.get(id);
 			tableRows.add(tableRow);
@@ -97,34 +93,6 @@ public final class DatabaseUtils
 	{
 		final String query = "select * from " + tableName;
 		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(tableName, query);
-	}
-
-	@Nonnull
-	public static List<String> getPrimaryIdentifierColumnNames(@Nonnull ConnectionProviderInstance liquibaseDBUnit, @Nonnull String tableName) throws DataSetException, SQLException
-	{
-		final String query;
-		if (liquibaseDBUnit.isOracle())
-		{
-			query = "SELECT column_name FROM all_cons_columns WHERE constraint_name = (" + " SELECT constraint_name FROM user_constraints" + " WHERE UPPER(table_name) = UPPER('" + tableName + "') AND CONSTRAINT_TYPE = 'P'" + ")";
-		}
-		else if (liquibaseDBUnit.isPostgreSQL())
-		{
-			query = "select kcu.column_name column_name from information_schema.table_constraints tc inner join information_schema.key_column_usage kcu on tc.constraint_name = kcu.constraint_name where tc.constraint_type= 'PRIMARY KEY'" + " and UPPER(tc.table_name) = UPPER('" + tableName + "')";
-		}
-		else
-		{
-			throw new DatabaseNotSupportedException("Database not supported.");
-		}
-
-		final CachedResultSetTable result = (CachedResultSetTable) liquibaseDBUnit.getDatabaseConnection().createQueryTable(tableName, query);
-
-		final List<String> primaryIdentifiers = new ArrayList<>();
-		for (int i = 0; i < result.getRowCount(); i++)
-		{
-			primaryIdentifiers.add((String) result.getValue(i, "column_name"));
-		}
-
-		return primaryIdentifiers;
 	}
 
 	@Nonnull

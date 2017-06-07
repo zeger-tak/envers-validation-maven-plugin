@@ -1,7 +1,6 @@
 package org.tak.zeger.enversvalidationplugin;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,10 +12,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.dbunit.database.CachedResultSetTable;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.entities.Config;
-import org.tak.zeger.enversvalidationplugin.exceptions.DatabaseNotSupportedException;
 import org.tak.zeger.enversvalidationplugin.execution.ValidationExecutor;
 import org.tak.zeger.enversvalidationplugin.utils.PropertyUtils;
 
@@ -58,32 +55,11 @@ public class EnversValidationMojo extends AbstractMojo
 	}
 
 	@Nonnull
-	private Set<String> getListOfAuditTablesInDatabase(ConnectionProviderInstance connectionProvider)
+	private Set<String> getListOfAuditTablesInDatabase(@Nonnull ConnectionProviderInstance connectionProvider)
 	{
-		final String query;
-		if (connectionProvider.isOracle())
-		{
-			query = "select TABLE_NAME from USER_TABLES where TABLE_NAME like '%" + connectionProvider.getAuditTablePostFix() + "'";
-		}
-		else if (connectionProvider.isPostgreSQL())
-		{
-			query = "select upper(table_name) table_name from information_schema.tables where UPPER(TABLE_NAME) like '%" + connectionProvider.getAuditTablePostFix() + "'";
-		}
-		else
-		{
-			throw new DatabaseNotSupportedException("Unable to start tests due to unsupported database type.");
-		}
 		try
 		{
-			final CachedResultSetTable allKnownTablesEndingWithPostFix = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("USER_TABLES", query);
-
-			final Set<String> auditTablesInDatabase = new HashSet<>(allKnownTablesEndingWithPostFix.getRowCount());
-			for (int i = 0; i < allKnownTablesEndingWithPostFix.getRowCount(); i++)
-			{
-				auditTablesInDatabase.add((String) allKnownTablesEndingWithPostFix.getValue(i, "TABLE_NAME"));
-			}
-
-			return auditTablesInDatabase;
+			return connectionProvider.getQueries().getTablesByNameEndingWith(connectionProvider.getAuditTablePostFix());
 		}
 		catch (Exception e)
 		{

@@ -5,13 +5,14 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
 import org.tak.zeger.enversvalidationplugin.annotation.ListOfAuditTablesInDatabase;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 
 public abstract class AbstractValidator
 {
-	@org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider
+	@ConnectionProvider
 	private ConnectionProviderInstance connectionProvider;
 
 	@WhiteList

@@ -12,7 +12,6 @@ import org.dbunit.dataset.DataSetException;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
-import org.tak.zeger.enversvalidationplugin.exceptions.DatabaseNotSupportedException;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @ValidationType(TargetPhase.TABLE_STRUCTURE)
@@ -51,22 +50,7 @@ public class AuditTableWhiteListValidator extends AbstractValidator
 		for (Map.Entry<String, String> whiteListEntry : getWhiteList().entrySet())
 		{
 			final String auditedTableName = whiteListEntry.getValue();
-			final String query;
-			if (getConnectionProvider().isOracle())
-			{
-				query = "select TABLE_NAME from USER_TABLES where UPPER(TABLE_NAME) = UPPER('" + auditedTableName + "')";
-			}
-			else if (getConnectionProvider().isPostgreSQL())
-			{
-				query = "select upper(table_name) table_name from information_schema.tables where UPPER(TABLE_NAME) = UPPER('" + auditedTableName + "')";
-			}
-			else
-			{
-				throw new DatabaseNotSupportedException("Unable to start tests due to unsupported database type.");
-			}
-
-			final CachedResultSetTable auditTable = (CachedResultSetTable) getConnectionProvider().getDatabaseConnection().createQueryTable("USER_TABLES", query);
-
+			final CachedResultSetTable auditTable = getConnectionProvider().getQueries().getTableByName(auditedTableName);
 			if (auditTable.getRowCount() != 1)
 			{
 				final String auditTableName = whiteListEntry.getKey();

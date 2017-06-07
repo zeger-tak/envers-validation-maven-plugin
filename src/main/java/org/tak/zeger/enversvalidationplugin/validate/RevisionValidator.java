@@ -47,7 +47,7 @@ public class RevisionValidator extends AbstractValidator
 		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
 		{
 			final CachedResultSetTable recordsInAuditedTable = DatabaseUtils.selectAllRecordsFromTable(connectionProvider, whiteListEntry.getValue());
-			final List<String> primaryIdentifierColumnNames = DatabaseUtils.getPrimaryIdentifierColumnNames(connectionProvider, whiteListEntry.getValue());
+			final List<String> primaryIdentifierColumnNames = connectionProvider.getQueries().getPrimaryKeyColumnNames(whiteListEntry.getValue());
 
 			testData.add(new Object[] { whiteListEntry.getValue(), DatabaseUtils.getRecordsInAuditedTableById(recordsInAuditedTable, primaryIdentifierColumnNames), DatabaseUtils.getRecordsInAuditTableGroupedById(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames) });
 		}

@@ -20,6 +20,7 @@ public class ConnectionProviderInstance
 	private final IDatabaseTester databaseTester;
 
 	private IDatabaseConnection databaseConnection;
+	private DatabaseQueries databaseQueries;
 
 	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password)
 	{
@@ -35,21 +36,24 @@ public class ConnectionProviderInstance
 	{
 		try
 		{
-			if (isOracle())
+			if (driverClass.equals("oracle.jdbc.OracleDriver"))
 			{
 				// For Oracle, provide the schema name. Otherwise, metadata for ALL objects is retrieved.
 				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password, username);
 				databaseConnection = jdbcDatabaseTester.getConnection();
 				getDatabaseConnection().getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new OracleDataTypeFactory());
+
+				databaseQueries = new OracleQueries(this);
 				return jdbcDatabaseTester;
 			}
-			else if (isPostgreSQL())
+			else if (driverClass.equals("org.postgresql.Driver"))
 			{
-				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password)
-				{
-				};
+				// For Postgresql
+				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password);
 				databaseConnection = jdbcDatabaseTester.getConnection();
 				getDatabaseConnection().getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new PostgresqlDataTypeFactory());
+
+				databaseQueries = new PostgresQueries(this);
 				return jdbcDatabaseTester;
 			}
 		}
@@ -78,14 +82,15 @@ public class ConnectionProviderInstance
 		return databaseConnection;
 	}
 
-	public boolean isOracle()
+	@Nonnull
+	public DatabaseQueries getQueries()
 	{
-		return driverClass.equals("oracle.jdbc.OracleDriver");
-	}
+		if (databaseQueries == null)
+		{
+			newDatabaseTester();
+		}
 
-	public boolean isPostgreSQL()
-	{
-		return driverClass.equals("org.postgresql.Driver");
+		return databaseQueries;
 	}
 
 	@Nonnull
