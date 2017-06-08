@@ -144,4 +144,42 @@ public class RevisionValidator extends AbstractValidator
 			throw new ValidationException("The latest (add/update) revision for the following identifiers: " + incorrectHistory + " for table " + auditedTableName + " does not reflect the actual values in the table.");
 		}
 	}
+
+	@Validate
+	public void testHistoryIsAValidFlow()
+	{
+		final List<String> identifiersWithInvalidHistory = new ArrayList<>(recordsInAuditTable.size());
+		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
+		{
+			boolean existingRecord = false;
+
+			for (TableRow tableRow : auditHistoryPerIdentifier.getValue())
+			{
+				final Object columnValue = tableRow.getColumnValue(getConnectionProvider().getQueries().getRevTypeColumnName());
+				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
+				{
+					break;
+				}
+				final int revType = ((BigDecimal) columnValue).intValue();
+				if (!existingRecord && revType != RevisionConstants.ADD_REVISION)
+				{
+					identifiersWithInvalidHistory.add(auditHistoryPerIdentifier.getKey());
+					continue;
+				}
+
+				if (existingRecord && revType == RevisionConstants.ADD_REVISION)
+				{
+					identifiersWithInvalidHistory.add(auditHistoryPerIdentifier.getKey());
+					continue;
+				}
+
+				existingRecord = !(existingRecord && revType == RevisionConstants.REMOVE_REVISION);
+			}
+		}
+
+		if (!identifiersWithInvalidHistory.isEmpty())
+		{
+			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history for the table " + auditedTableName);
+		}
+	}
 }
