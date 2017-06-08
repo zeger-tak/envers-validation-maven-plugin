@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -68,7 +69,7 @@ public class AuditTableWhiteListValidator extends AbstractValidator
 	private Set<String> determineWhiteListedAuditTablesThatDoNotExistInDatabase(@Nonnull Set<String> whiteListedAuditTables, @Nonnull Set<String> auditTablesInDatabase)
 	{
 		final Set<String> whiteListedAuditTablesThatDoNotExistInDatabase = new HashSet<>(whiteListedAuditTables);
-		whiteListedAuditTablesThatDoNotExistInDatabase.removeAll(auditTablesInDatabase);
+		whiteListedAuditTablesThatDoNotExistInDatabase.removeAll(auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet()));
 
 		return whiteListedAuditTablesThatDoNotExistInDatabase;
 	}
@@ -76,7 +77,7 @@ public class AuditTableWhiteListValidator extends AbstractValidator
 	@Nonnull
 	private Set<String> determineAuditTablesNotOnWhiteList(@Nonnull Set<String> auditTablesInDatabase, @Nonnull Set<String> whiteListedAuditTables)
 	{
-		final Set<String> auditTablesNotOnWhiteList = new HashSet<>(auditTablesInDatabase);
+		final Set<String> auditTablesNotOnWhiteList = auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet());
 		auditTablesNotOnWhiteList.removeAll(whiteListedAuditTables);
 
 		return auditTablesNotOnWhiteList;
