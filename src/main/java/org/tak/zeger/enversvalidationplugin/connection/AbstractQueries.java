@@ -19,6 +19,7 @@ public abstract class AbstractQueries implements DatabaseQueries
 {
 	private final String auditTablePostFix = "_AUD";
 	private final String revTypeColumnName = "REVTYPE";
+	private final String revisionTableName = "REVINFO";
 
 	@Nonnull
 	@Override
@@ -32,6 +33,13 @@ public abstract class AbstractQueries implements DatabaseQueries
 	public String getRevTypeColumnName()
 	{
 		return revTypeColumnName;
+	}
+
+	@Nonnull
+	@Override
+	public String getRevisionTableName()
+	{
+		return revisionTableName;
 	}
 
 	@Nonnull

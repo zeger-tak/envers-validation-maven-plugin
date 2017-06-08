@@ -22,6 +22,20 @@ public class PostgresQueries extends AbstractQueries
 
 	@Nonnull
 	@Override
+	public String getRevTypeColumnName()
+	{
+		return super.getRevTypeColumnName().toLowerCase();
+	}
+
+	@Nonnull
+	@Override
+	public String getRevisionTableName()
+	{
+		return super.getRevisionTableName().toLowerCase();
+	}
+	
+	@Nonnull
+	@Override
 	public CachedResultSetTable getTableByName(@Nonnull String tableName) throws SQLException, DataSetException
 	{
 		final String query = "select upper(table_name) table_name from information_schema.tables where UPPER(TABLE_NAME) = UPPER('" + tableName + "')";
@@ -61,8 +75,24 @@ public class PostgresQueries extends AbstractQueries
 
 	@Nonnull
 	@Override
-	public String getRevTypeColumnName()
+	public Set<String> getListOfTablesWithForeignKeysToRevisionTable() throws SQLException, DataSetException
 	{
-		return super.getRevTypeColumnName().toLowerCase();
+		final String query =
+				//@formatter:off	
+				"select upper(tc.table_name) table_name from information_schema.referential_constraints rc " 
+				+ "inner join information_schema.table_constraints tc on tc.constraint_name = rc.constraint_name " 
+				+ "inner join information_schema.table_constraints tc2 on tc2.constraint_name = rc.unique_constraint_name " 
+				+ "where tc2.constraint_type = 'PRIMARY KEY' and tc2.table_name = '" + getRevisionTableName() + "'";
+				//@formatter:on
+
+		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("USER_TABLES", query);
+
+		final Set<String> auditTablesInDatabase = new HashSet<>(tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount());
+		for (int i = 0; i < tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount(); i++)
+		{
+			auditTablesInDatabase.add((String) tablesInDatabaseWithForeignKeyToRevisionTable.getValue(i, "TABLE_NAME"));
+		}
+
+		return auditTablesInDatabase;
 	}
 }

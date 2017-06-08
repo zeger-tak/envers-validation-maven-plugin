@@ -59,4 +59,27 @@ public class OracleQueries extends AbstractQueries
 
 		return primaryIdentifiers;
 	}
+
+	@Nonnull
+	@Override
+	public Set<String> getListOfTablesWithForeignKeysToRevisionTable() throws SQLException, DataSetException
+	{
+		final String query =
+				//@formatter:off
+				"select c1.table_name from user_constraints c1 " 
+				+ "inner  join user_constraints c2 on c2.constraint_name = c1.r_constraint_name " 
+				+ "where c1.constraint_type = 'R' " 
+				+ "and c2.constraint_type = 'P' and c2.table_name = '" + getRevisionTableName() + "'";
+				//@formatter:on
+
+		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("DBA_CONSTRAINTS", query);
+
+		final Set<String> auditTablesInDatabase = new HashSet<>(tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount());
+		for (int i = 0; i < tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount(); i++)
+		{
+			auditTablesInDatabase.add((String) tablesInDatabaseWithForeignKeyToRevisionTable.getValue(i, "TABLE_NAME"));
+		}
+
+		return auditTablesInDatabase;
+	}
 }
