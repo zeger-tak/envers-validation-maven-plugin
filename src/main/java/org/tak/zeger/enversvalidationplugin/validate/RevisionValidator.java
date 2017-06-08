@@ -12,7 +12,6 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.dbunit.database.CachedResultSetTable;
 import org.dbunit.dataset.DataSetException;
 import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
 import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
@@ -24,7 +23,6 @@ import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstanc
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
-import org.tak.zeger.enversvalidationplugin.utils.DatabaseUtils;
 
 @ValidationType(TargetPhase.CONTENT)
 public class RevisionValidator extends AbstractValidator
@@ -46,10 +44,11 @@ public class RevisionValidator extends AbstractValidator
 		final List<Object[]> testData = new ArrayList<>();
 		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
 		{
-			final CachedResultSetTable recordsInAuditedTable = DatabaseUtils.selectAllRecordsFromTable(connectionProvider, whiteListEntry.getValue());
 			final List<String> primaryIdentifierColumnNames = connectionProvider.getQueries().getPrimaryKeyColumnNames(whiteListEntry.getValue());
 
-			testData.add(new Object[] { whiteListEntry.getValue(), DatabaseUtils.getRecordsInAuditedTableById(recordsInAuditedTable, primaryIdentifierColumnNames), DatabaseUtils.getRecordsInAuditTableGroupedById(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames) });
+			final Map<String, TableRow> recordsInAuditedTableById = connectionProvider.getQueries().getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
+			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = connectionProvider.getQueries().getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
+			testData.add(new Object[] { whiteListEntry.getValue(), recordsInAuditedTableById, recordsInAuditTableGroupedById });
 		}
 
 		return testData;
@@ -69,7 +68,7 @@ public class RevisionValidator extends AbstractValidator
 			}
 
 			final TableRow lastRecord = auditHistoryValue.get(auditHistoryValue.size() - 1);
-			final Object columnValue = lastRecord.getColumnValue(RevisionConstants.REVTYPE_COLUMN_NAME);
+			final Object columnValue = lastRecord.getColumnValue(getConnectionProvider().getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
 				continue;
@@ -95,7 +94,7 @@ public class RevisionValidator extends AbstractValidator
 		{
 			final List<TableRow> auditHistoryValue = auditHistory.getValue();
 			final TableRow lastRecord = auditHistoryValue.get(auditHistoryValue.size() - 1);
-			final Object columnValue = lastRecord.getColumnValue(RevisionConstants.REVTYPE_COLUMN_NAME);
+			final Object columnValue = lastRecord.getColumnValue(getConnectionProvider().getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
 				continue;

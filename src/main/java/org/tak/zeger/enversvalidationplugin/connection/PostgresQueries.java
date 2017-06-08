@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 import org.dbunit.database.CachedResultSetTable;
 import org.dbunit.dataset.DataSetException;
 
-public class PostgresQueries implements DatabaseQueries
+public class PostgresQueries extends AbstractQueries
 {
 	private final ConnectionProviderInstance connectionProvider;
 
@@ -21,6 +21,7 @@ public class PostgresQueries implements DatabaseQueries
 	}
 
 	@Nonnull
+	@Override
 	public CachedResultSetTable getTableByName(@Nonnull String tableName) throws SQLException, DataSetException
 	{
 		final String query = "select upper(table_name) table_name from information_schema.tables where UPPER(TABLE_NAME) = UPPER('" + tableName + "')";
@@ -31,7 +32,7 @@ public class PostgresQueries implements DatabaseQueries
 	@Override
 	public Set<String> getTablesByNameEndingWith(@Nonnull String postFix) throws SQLException, DataSetException
 	{
-		final String query = "select table_name from information_schema.tables where UPPER(TABLE_NAME) like '%" + connectionProvider.getAuditTablePostFix() + "'";
+		final String query = "select table_name from information_schema.tables where UPPER(TABLE_NAME) like '%" + connectionProvider.getQueries().getAuditTablePostFix() + "'";
 
 		final CachedResultSetTable allKnownTablesEndingWithPostFix = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("tables", query);
 		final Set<String> auditTablesInDatabase = new HashSet<>(allKnownTablesEndingWithPostFix.getRowCount());
@@ -44,6 +45,7 @@ public class PostgresQueries implements DatabaseQueries
 	}
 
 	@Nonnull
+	@Override
 	public List<String> getPrimaryKeyColumnNames(@Nonnull String tableName) throws SQLException, DataSetException
 	{
 		final String query = "select kcu.column_name from information_schema.table_constraints tc inner join information_schema.key_column_usage kcu on tc.constraint_name = kcu.constraint_name where tc.constraint_type= 'PRIMARY KEY'" + " and UPPER(tc.table_name) = UPPER('" + tableName + "')";
@@ -55,5 +57,12 @@ public class PostgresQueries implements DatabaseQueries
 			primaryIdentifiers.add((String) result.getValue(i, "column_name"));
 		}
 		return primaryIdentifiers;
+	}
+
+	@Nonnull
+	@Override
+	public String getRevTypeColumnName()
+	{
+		return super.getRevTypeColumnName().toLowerCase();
 	}
 }

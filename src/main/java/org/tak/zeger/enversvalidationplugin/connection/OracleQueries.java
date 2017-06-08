@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 import org.dbunit.database.CachedResultSetTable;
 import org.dbunit.dataset.DataSetException;
 
-public class OracleQueries implements DatabaseQueries
+public class OracleQueries extends AbstractQueries
 {
 	private final ConnectionProviderInstance connectionProvider;
 
@@ -21,6 +21,7 @@ public class OracleQueries implements DatabaseQueries
 	}
 
 	@Nonnull
+	@Override
 	public CachedResultSetTable getTableByName(@Nonnull String tableName) throws SQLException, DataSetException
 	{
 		final String query = "select TABLE_NAME from USER_TABLES where UPPER(TABLE_NAME) = UPPER('" + tableName + "')";
@@ -31,7 +32,7 @@ public class OracleQueries implements DatabaseQueries
 	@Override
 	public Set<String> getTablesByNameEndingWith(@Nonnull String postFix) throws SQLException, DataSetException
 	{
-		final String query = "select TABLE_NAME from USER_TABLES where TABLE_NAME like '%" + connectionProvider.getAuditTablePostFix() + "'";
+		final String query = "select TABLE_NAME from USER_TABLES where TABLE_NAME like '%" + connectionProvider.getQueries().getAuditTablePostFix() + "'";
 		final CachedResultSetTable allKnownTablesEndingWithPostFix = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("USER_TABLES", query);
 
 		final Set<String> auditTablesInDatabase = new HashSet<>(allKnownTablesEndingWithPostFix.getRowCount());
@@ -44,6 +45,7 @@ public class OracleQueries implements DatabaseQueries
 	}
 
 	@Nonnull
+	@Override
 	public List<String> getPrimaryKeyColumnNames(@Nonnull String tableName) throws SQLException, DataSetException
 	{
 		final String query = "SELECT COLUMN_NAME FROM all_cons_columns WHERE constraint_name = (" + " SELECT constraint_name FROM user_constraints" + " WHERE UPPER(table_name) = UPPER('" + tableName + "') AND CONSTRAINT_TYPE = 'P'" + ")";

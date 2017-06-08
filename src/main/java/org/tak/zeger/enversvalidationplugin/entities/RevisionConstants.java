@@ -8,7 +8,6 @@ public final class RevisionConstants
 	public static final int ADD_REVISION = RevisionType.ADD.getRepresentation();
 	public static final int UPDATE_REVISION = RevisionType.MOD.getRepresentation();
 	public static final int REMOVE_REVISION = RevisionType.DEL.getRepresentation();
-	public static final String REVTYPE_COLUMN_NAME = "REVTYPE";
 
 	private RevisionConstants()
 	{

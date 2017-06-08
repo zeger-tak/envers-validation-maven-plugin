@@ -25,15 +25,7 @@ public final class PropertyUtils
 	public static ConnectionProviderInstance getConnectionProperties(@Nonnull File file) throws MojoFailureException
 	{
 		final Properties connectionPropertiesInFile = getPropertiesFromFile(file);
-		final ConnectionProviderInstance connectionProvider = createConnectionProvider(connectionPropertiesInFile);
-
-		final String auditTablePostFixPropertyKey = "auditTablePostFix";
-		final String auditTablePostFix = connectionPropertiesInFile.getProperty(auditTablePostFixPropertyKey);
-		if (StringUtils.isNotBlank(auditTablePostFix))
-		{
-			connectionProvider.setAuditTablePostFix(auditTablePostFix);
-		}
-		return connectionProvider;
+		return createConnectionProvider(connectionPropertiesInFile);
 	}
 
 	@Nonnull
