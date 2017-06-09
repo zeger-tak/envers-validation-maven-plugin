@@ -95,4 +95,26 @@ public class PostgresQueries extends AbstractQueries
 
 		return auditTablesInDatabase;
 	}
+
+	@Nonnull
+	@Override
+	public Set<String> getAllNonnullColumns(@Nonnull String tableName) throws SQLException, DataSetException
+	{
+		final String query =
+				//@formatter:off
+				"select column_name from information_schema.columns " 
+				+ "where table_name = 'revinfo' " 
+				+ "and is_nullable = 'NO';";
+				//@formatter:on
+
+		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("columns", query);
+
+		final Set<String> auditTablesInDatabase = new HashSet<>(tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount());
+		for (int i = 0; i < tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount(); i++)
+		{
+			auditTablesInDatabase.add((String) tablesInDatabaseWithForeignKeyToRevisionTable.getValue(i, "column_name"));
+		}
+
+		return auditTablesInDatabase;
+	}
 }

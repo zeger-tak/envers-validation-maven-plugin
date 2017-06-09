@@ -39,4 +39,7 @@ public interface DatabaseQueries
 
 	@Nonnull
 	Set<String> getListOfTablesWithForeignKeysToRevisionTable() throws SQLException, DataSetException;
+
+	@Nonnull
+	Set<String> getAllNonnullColumns(@Nonnull String tableName) throws SQLException, DataSetException;
 }

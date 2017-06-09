@@ -82,4 +82,27 @@ public class OracleQueries extends AbstractQueries
 
 		return auditTablesInDatabase;
 	}
+
+	@Nonnull
+	@Override
+	public Set<String> getAllNonnullColumns(@Nonnull String tableName) throws SQLException, DataSetException
+	{
+		final String query =
+				//@formatter:off
+				"select column_name" 
+				+ " from user_tab_columns " 
+				+ "where table_name = '" + tableName + "REVINFO' " 
+				+ "and nullable = 'N'";
+				//@formatter:on
+
+		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("user_tab_columns", query);
+
+		final Set<String> auditTablesInDatabase = new HashSet<>(tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount());
+		for (int i = 0; i < tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount(); i++)
+		{
+			auditTablesInDatabase.add((String) tablesInDatabaseWithForeignKeyToRevisionTable.getValue(i, "column_name"));
+		}
+
+		return auditTablesInDatabase;
+	}
 }
