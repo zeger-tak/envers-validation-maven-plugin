@@ -33,7 +33,14 @@ public class PostgresQueries extends AbstractQueries
 	{
 		return super.getRevisionTableName().toLowerCase();
 	}
-	
+
+	@Nonnull
+	@Override
+	public String getRevisionTableIdentifierColumnName()
+	{
+		return super.getRevisionTableIdentifierColumnName().toLowerCase();
+	}
+
 	@Nonnull
 	@Override
 	public CachedResultSetTable getTableByName(@Nonnull String tableName) throws SQLException, DataSetException

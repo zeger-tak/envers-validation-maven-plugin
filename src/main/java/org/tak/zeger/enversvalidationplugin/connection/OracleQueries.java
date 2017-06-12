@@ -72,7 +72,7 @@ public class OracleQueries extends AbstractQueries
 				+ "and c2.constraint_type = 'P' and c2.table_name = '" + getRevisionTableName() + "'";
 				//@formatter:on
 
-		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("DBA_CONSTRAINTS", query);
+		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("USER_CONSTRAINTS", query);
 
 		final Set<String> auditTablesInDatabase = new HashSet<>(tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount());
 		for (int i = 0; i < tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount(); i++)

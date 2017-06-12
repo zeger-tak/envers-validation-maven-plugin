@@ -20,6 +20,9 @@ public interface DatabaseQueries
 	String getRevTypeColumnName();
 
 	@Nonnull
+	String getRevisionTableIdentifierColumnName();
+
+	@Nonnull
 	String getRevisionTableName();
 	
 	@Nonnull
