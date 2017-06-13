@@ -20,6 +20,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
@@ -41,13 +42,14 @@ public class RevisionValidator extends AbstractValidator
 	@Parameterized(name = "{index}: auditTableName: {0}", uniqueIdentifier = "{0}")
 	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
 	{
+		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
 		final List<Object[]> testData = new ArrayList<>();
 		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
 		{
-			final List<String> primaryIdentifierColumnNames = connectionProvider.getQueries().getPrimaryKeyColumnNames(whiteListEntry.getValue());
+			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue());
 
-			final Map<String, TableRow> recordsInAuditedTableById = connectionProvider.getQueries().getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
-			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = connectionProvider.getQueries().getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
+			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
+			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
 			testData.add(new Object[] { whiteListEntry.getValue(), recordsInAuditedTableById, recordsInAuditTableGroupedById });
 		}
 
