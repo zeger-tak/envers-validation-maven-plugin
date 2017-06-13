@@ -2,6 +2,7 @@ package org.tak.zeger.enversvalidationplugin.validate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -93,6 +94,7 @@ public class PrimaryKeyValidatorTest
 		{
 			// When
 			validator.validateAuditTableHasAValidPrimaryKey();
+			fail("Expected a " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
 		{
@@ -112,6 +114,7 @@ public class PrimaryKeyValidatorTest
 		{
 			// When
 			validator.validateAuditTableHasAValidPrimaryKey();
+			fail("Expected a " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
 		{
@@ -131,6 +134,7 @@ public class PrimaryKeyValidatorTest
 		{
 			// When
 			validator.validateAuditTableHasAValidPrimaryKey();
+			fail("Expected a " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
 		{
@@ -146,15 +150,10 @@ public class PrimaryKeyValidatorTest
 		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, AUDIT_TABLE_NAME, AUDITED_TABLE_NAME, Arrays.asList(REVISION_COLUMN_NAME, AUDITED_TABLE_NAME), Collections.singletonList(AUDITED_TABLE_NAME));
 		when(databaseQueries.getRevisionTableIdentifierColumnName()).thenReturn(REVISION_COLUMN_NAME);
 
-		try
-		{
-			// When
-			validator.validateAuditTableHasAValidPrimaryKey();
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("The primary key of audit table auditTable is comprised of more columns than expected, the following columns were not expected: [unexpected]", e.getMessage());
-		}
+		// When
+		validator.validateAuditTableHasAValidPrimaryKey();
+
+		// Then
+		// Do nothing, result was expected
 	}
 }
