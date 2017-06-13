@@ -24,39 +24,28 @@ public class ForeignKeyConstraintValidator
 	private ConnectionProviderInstance connectionProvider;
 
 	@Validate
-	public void testNoForeignKeysExistsForNonWhiteListedTables() throws SQLException, DataSetException
+	public void validateNoForeignKeysExistsForNonWhiteListedTables() throws SQLException, DataSetException
 	{
 		final Set<String> auditTablesInDatabase = connectionProvider.getQueries().getListOfTablesWithForeignKeysToRevisionTable();
-		final Set<String> tablesWithForeignKeyButNotWhiteListed = new HashSet<>(auditTablesInDatabase.size());
-		for (String tableName : auditTablesInDatabase)
-		{
-			if (!whiteList.keySet().contains(tableName))
-			{
-				tablesWithForeignKeyButNotWhiteListed.add(tableName);
-			}
-		}
+		final Set<String> tablesWithForeignKeyButNotWhiteListed = new HashSet<>(auditTablesInDatabase);
 
+		tablesWithForeignKeyButNotWhiteListed.removeAll(whiteList.keySet());
 		if (!tablesWithForeignKeyButNotWhiteListed.isEmpty())
 		{
-			throw new ValidationException("Tables found with a reference to the revision table, which are not on the white list:" + tablesWithForeignKeyButNotWhiteListed);
+			throw new ValidationException("Tables found with a reference to the revision table, which are not on the white list: " + tablesWithForeignKeyButNotWhiteListed);
 		}
 	}
 
 	@Validate
-	public void testAllAuditTablesHaveAForeignKeyToRevisionTable() throws SQLException, DataSetException
+	public void validateAllAuditTablesHaveAForeignKeyToRevisionTable() throws SQLException, DataSetException
 	{
-		final Set<String> auditTablesWithoutForeignKeyToRevisionTable = new HashSet<>(whiteList.size());
-		for (String auditTable : whiteList.keySet())
-		{
-			if (!connectionProvider.getQueries().getListOfTablesWithForeignKeysToRevisionTable().contains(auditTable))
-			{
-				auditTablesWithoutForeignKeyToRevisionTable.add(auditTable);
-			}
-		}
+		final Set<String> auditTablesInDatabase = connectionProvider.getQueries().getListOfTablesWithForeignKeysToRevisionTable();
+		final Set<String> whiteListedAuditTablesWithoutForeignKey = new HashSet<>(whiteList.keySet());
+		whiteListedAuditTablesWithoutForeignKey.removeAll(auditTablesInDatabase);
 
-		if (!auditTablesWithoutForeignKeyToRevisionTable.isEmpty())
+		if (!whiteListedAuditTablesWithoutForeignKey.isEmpty())
 		{
-			throw new ValidationException("Whitelisted audit tables found without a foreign key to the revision table" + auditTablesWithoutForeignKeyToRevisionTable);
+			throw new ValidationException("Whitelisted audit tables found without a foreign key to the revision table" + whiteListedAuditTablesWithoutForeignKey);
 		}
 	}
 }
