@@ -6,24 +6,36 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-
 import org.dbunit.database.CachedResultSetTable;
 import org.dbunit.dataset.DataSetException;
+import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
+import org.tak.zeger.enversvalidationplugin.annotation.ListOfAuditTablesInDatabase;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
+import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
+import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @ValidationType(TargetPhase.TABLE_STRUCTURE)
-public class AuditTableWhiteListValidator extends AbstractValidator
+public class AuditTableWhiteListValidator
 {
-	@Validate
-	public void testAllExistingAuditTablesAreWhiteListed()
-	{
-		final Set<String> whiteListedAuditTables = getWhiteList().keySet();
+	@WhiteList
+	private Map<String, String> whiteList;
 
-		final Set<String> auditTablesNotOnWhiteList = determineAuditTablesNotOnWhiteList(getAuditTablesInDatabase(), whiteListedAuditTables);
+	@ListOfAuditTablesInDatabase
+	private Set<String> auditTablesInDatabase;
+
+	@ConnectionProvider
+	private ConnectionProviderInstance connectionProvider;
+
+	@Validate
+	public void validateAllExistingAuditTablesAreWhiteListed()
+	{
+		final Set<String> whiteListedAuditTables = whiteList.keySet();
+
+		final Set<String> auditTablesNotOnWhiteList = auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet());
+		auditTablesNotOnWhiteList.removeAll(whiteListedAuditTables);
 
 		if (!auditTablesNotOnWhiteList.isEmpty())
 		{
@@ -32,11 +44,12 @@ public class AuditTableWhiteListValidator extends AbstractValidator
 	}
 
 	@Validate
-	public void testAllWhiteListedAuditTablesExist()
+	public void validateAllWhiteListedAuditTablesExist()
 	{
-		final Set<String> whiteListedAuditTables = getWhiteList().keySet();
+		final Set<String> whiteListedAuditTables = whiteList.keySet();
 
-		final Set<String> whiteListedAuditTablesThatDoNotExistInDatabase = determineWhiteListedAuditTablesThatDoNotExistInDatabase(whiteListedAuditTables, getAuditTablesInDatabase());
+		final Set<String> whiteListedAuditTablesThatDoNotExistInDatabase = new HashSet<>(whiteListedAuditTables);
+		whiteListedAuditTablesThatDoNotExistInDatabase.removeAll(auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet()));
 
 		if (!whiteListedAuditTablesThatDoNotExistInDatabase.isEmpty())
 		{
@@ -45,13 +58,13 @@ public class AuditTableWhiteListValidator extends AbstractValidator
 	}
 
 	@Validate
-	public void testAllWhiteListedAuditTablesAuditAnExistingTable() throws SQLException, DataSetException
+	public void validateAllWhiteListedAuditTablesAuditAnExistingTable() throws SQLException, DataSetException
 	{
-		final Set<String> auditTablesWithoutATableToAudit = new HashSet<>(getWhiteList().size());
-		for (Map.Entry<String, String> whiteListEntry : getWhiteList().entrySet())
+		final Set<String> auditTablesWithoutATableToAudit = new HashSet<>(whiteList.size());
+		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
 		{
 			final String auditedTableName = whiteListEntry.getValue();
-			final CachedResultSetTable auditTable = getConnectionProvider().getQueries().getTableByName(auditedTableName);
+			final CachedResultSetTable auditTable = connectionProvider.getQueries().getTableByName(auditedTableName);
 			if (auditTable.getRowCount() != 1)
 			{
 				final String auditTableName = whiteListEntry.getKey();
@@ -63,23 +76,5 @@ public class AuditTableWhiteListValidator extends AbstractValidator
 		{
 			throw new ValidationException("The following audit tables do not audit another table in the database, or do not have the correct mapping to the audited table: " + auditTablesWithoutATableToAudit);
 		}
-	}
-
-	@Nonnull
-	private Set<String> determineWhiteListedAuditTablesThatDoNotExistInDatabase(@Nonnull Set<String> whiteListedAuditTables, @Nonnull Set<String> auditTablesInDatabase)
-	{
-		final Set<String> whiteListedAuditTablesThatDoNotExistInDatabase = new HashSet<>(whiteListedAuditTables);
-		whiteListedAuditTablesThatDoNotExistInDatabase.removeAll(auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet()));
-
-		return whiteListedAuditTablesThatDoNotExistInDatabase;
-	}
-
-	@Nonnull
-	private Set<String> determineAuditTablesNotOnWhiteList(@Nonnull Set<String> auditTablesInDatabase, @Nonnull Set<String> whiteListedAuditTables)
-	{
-		final Set<String> auditTablesNotOnWhiteList = auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet());
-		auditTablesNotOnWhiteList.removeAll(whiteListedAuditTables);
-
-		return auditTablesNotOnWhiteList;
 	}
 }
