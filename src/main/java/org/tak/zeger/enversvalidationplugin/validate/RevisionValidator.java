@@ -26,14 +26,16 @@ import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @ValidationType(TargetPhase.CONTENT)
-public class RevisionValidator extends AbstractValidator
+public class RevisionValidator
 {
+	private final ConnectionProviderInstance connectionProvider;
 	private final String auditedTableName;
 	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
 
-	public RevisionValidator(@Nonnull String auditedTableName, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK, @Nonnull Map<String, List<TableRow>> recordsInAuditTable)
+	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditedTableName, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK, @Nonnull Map<String, List<TableRow>> recordsInAuditTable)
 	{
+		this.connectionProvider = connectionProvider;
 		this.auditedTableName = auditedTableName;
 		this.recordsInAuditedTableIdentifiedByPK = recordsInAuditedTableIdentifiedByPK;
 		this.recordsInAuditTable = recordsInAuditTable;
@@ -50,14 +52,14 @@ public class RevisionValidator extends AbstractValidator
 
 			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
 			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
-			testData.add(new Object[] { whiteListEntry.getValue(), recordsInAuditedTableById, recordsInAuditTableGroupedById });
+			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), recordsInAuditedTableById, recordsInAuditTableGroupedById });
 		}
 
 		return testData;
 	}
 
 	@Validate
-	public void testAllRecordsInAuditedTableHaveARevision()
+	public void validatetAllRecordsInAuditedTableHaveARevision()
 	{
 		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = new ArrayList<>(recordsInAuditedTableIdentifiedByPK.size());
 		for (Map.Entry<String, TableRow> auditedRow : recordsInAuditedTableIdentifiedByPK.entrySet())
@@ -70,7 +72,7 @@ public class RevisionValidator extends AbstractValidator
 			}
 
 			final TableRow lastRecord = auditHistoryValue.get(auditHistoryValue.size() - 1);
-			final Object columnValue = lastRecord.getColumnValue(getConnectionProvider().getQueries().getRevTypeColumnName());
+			final Object columnValue = lastRecord.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
 				continue;
@@ -89,14 +91,14 @@ public class RevisionValidator extends AbstractValidator
 	}
 
 	@Validate
-	public void testAllLatestAddOrRemoveRevisionsShowCurrentStatus()
+	public void validateAllLatestAddOrRemoveRevisionsShowCurrentStatus()
 	{
 		final Map<String, Map<String, TableRow>> incorrectHistory = new HashMap<>();
 		for (Map.Entry<String, List<TableRow>> auditHistory : recordsInAuditTable.entrySet())
 		{
 			final List<TableRow> auditHistoryValue = auditHistory.getValue();
 			final TableRow lastRecord = auditHistoryValue.get(auditHistoryValue.size() - 1);
-			final Object columnValue = lastRecord.getColumnValue(getConnectionProvider().getQueries().getRevTypeColumnName());
+			final Object columnValue = lastRecord.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
 				continue;
@@ -148,7 +150,7 @@ public class RevisionValidator extends AbstractValidator
 	}
 
 	@Validate
-	public void testHistoryIsAValidFlow()
+	public void validateHistoryIsAValidFlow()
 	{
 		final List<String> identifiersWithInvalidHistory = new ArrayList<>(recordsInAuditTable.size());
 		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
@@ -157,7 +159,7 @@ public class RevisionValidator extends AbstractValidator
 
 			for (TableRow tableRow : auditHistoryPerIdentifier.getValue())
 			{
-				final Object columnValue = tableRow.getColumnValue(getConnectionProvider().getQueries().getRevTypeColumnName());
+				final Object columnValue = tableRow.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 				{
 					break;
