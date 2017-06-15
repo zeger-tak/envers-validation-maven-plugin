@@ -3,7 +3,6 @@ package org.tak.zeger.enversvalidationplugin.validate;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,15 +58,17 @@ public class RevisionValidator
 	}
 
 	@Validate
-	public void validatetAllRecordsInAuditedTableHaveARevision()
+	public void validateAllRecordsInAuditedTableHaveAValidLatestRevision()
 	{
 		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = new ArrayList<>(recordsInAuditedTableIdentifiedByPK.size());
+		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = new HashMap<>();
 		for (Map.Entry<String, TableRow> auditedRow : recordsInAuditedTableIdentifiedByPK.entrySet())
 		{
-			final List<TableRow> auditHistoryValue = recordsInAuditTable.get(auditedRow.getKey());
+			final String primaryKeyIdentifier = auditedRow.getKey();
+			final List<TableRow> auditHistoryValue = recordsInAuditTable.get(primaryKeyIdentifier);
 			if (auditHistoryValue == null)
 			{
-				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(auditedRow.getKey());
+				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(primaryKeyIdentifier);
 				continue;
 			}
 
@@ -80,42 +81,10 @@ public class RevisionValidator
 			final int revType = ((BigDecimal) columnValue).intValue();
 			if (revType == RevisionConstants.REMOVE_REVISION)
 			{
-				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(auditedRow.getKey());
-			}
-		}
-
-		if (!identifiersWhichShouldHaveAnAddOrUpdateRevision.isEmpty())
-		{
-			throw new ValidationException("The following identifiers " + identifiersWhichShouldHaveAnAddOrUpdateRevision + " in table " + auditedTableName + " do not have an add/update revision table as their last revision or do not have a revision at all");
-		}
-	}
-
-	@Validate
-	public void validateAllLatestAddOrRemoveRevisionsShowCurrentStatus()
-	{
-		final Map<String, Map<String, TableRow>> incorrectHistory = new HashMap<>();
-		for (Map.Entry<String, List<TableRow>> auditHistory : recordsInAuditTable.entrySet())
-		{
-			final List<TableRow> auditHistoryValue = auditHistory.getValue();
-			final TableRow lastRecord = auditHistoryValue.get(auditHistoryValue.size() - 1);
-			final Object columnValue = lastRecord.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
-			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
-			{
-				continue;
-			}
-			final int revType = ((BigDecimal) columnValue).intValue();
-			if (revType != RevisionConstants.ADD_REVISION && revType != RevisionConstants.UPDATE_REVISION)
-			{
-				continue;
+				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(primaryKeyIdentifier);
 			}
 
-			final TableRow actualRecord = recordsInAuditedTableIdentifiedByPK.get(auditHistory.getKey());
-			if (actualRecord == null)
-			{
-				incorrectHistory.put(auditHistory.getKey(), Collections.emptyMap());
-				continue;
-			}
-
+			final TableRow actualRecord = auditedRow.getValue();
 			final Set<String> columnNames = actualRecord.getColumnNames();
 			final Map<String, TableRow> incorrectColumns = new HashMap<>();
 			for (String columnName : columnNames)
@@ -136,16 +105,52 @@ public class RevisionValidator
 					incorrectColumns.get("audited").addColumn(columnName, auditedValue);
 				}
 			}
-
 			if (!incorrectColumns.isEmpty())
 			{
-				incorrectHistory.put(auditHistory.getKey(), incorrectColumns);
+				rowsWithDifferentValues.put(primaryKeyIdentifier, incorrectColumns);
 			}
 		}
 
-		if (!incorrectHistory.isEmpty())
+		final StringBuilder errorMessage = new StringBuilder();
+		if (!identifiersWhichShouldHaveAnAddOrUpdateRevision.isEmpty())
 		{
-			throw new ValidationException("The latest (add/update) revision for the following identifiers: " + incorrectHistory + " for table " + auditedTableName + " does not reflect the actual values in the table.");
+			errorMessage.append("The following identifiers ");
+			errorMessage.append(identifiersWhichShouldHaveAnAddOrUpdateRevision);
+			errorMessage.append(" in table ");
+			errorMessage.append(auditedTableName);
+			errorMessage.append(" do not have an add/update revision table as their last revision or do not have a revision at all");
+
+			if (!rowsWithDifferentValues.isEmpty())
+			{
+				errorMessage.append(". \n");
+			}
+		}
+
+		for (Map.Entry<String, Map<String, TableRow>> identifierWithDifferentRowValues : rowsWithDifferentValues.entrySet())
+		{
+			errorMessage.append("Row with identifier ");
+			errorMessage.append(identifierWithDifferentRowValues.getKey());
+			errorMessage.append(" has a different audit row than the actual value in the table to audit, the following columns differ: \n");
+
+			final Map<String, TableRow> records = identifierWithDifferentRowValues.getValue();
+			final TableRow actualColumnValues = records.get("actual");
+			final TableRow auditedColumnValues = records.get("audited");
+
+			for (String columnName : actualColumnValues.getColumnNames())
+			{
+				errorMessage.append("	Actual value for column ");
+				errorMessage.append(columnName);
+				errorMessage.append(": ");
+				errorMessage.append(actualColumnValues.getColumnValue(columnName));
+				errorMessage.append(", audited value: ");
+				errorMessage.append(auditedColumnValues.getColumnValue(columnName));
+				errorMessage.append(".\n");
+			}
+		}
+
+		if (errorMessage.length() > 0)
+		{
+			throw new ValidationException(errorMessage.toString());
 		}
 	}
 
