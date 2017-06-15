@@ -49,7 +49,7 @@ public class NullableColumnsValidator
 	}
 
 	@Validate
-	public void testAllColumnsExceptPrimaryKeyAreNullable()
+	public void validateAllColumnsExceptPrimaryKeyAreNullable()
 	{
 		final Set<String> invalidNonnullColumnNames = nonNullColumns.stream().filter(c -> !primaryIdentifierColumnNames.contains(c)).collect(Collectors.toSet());
 
