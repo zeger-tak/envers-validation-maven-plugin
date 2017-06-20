@@ -6,12 +6,13 @@ import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class TableRow
 {
 	private final Map<String, Object> columns = new HashMap<>();
 
-	public void addColumn(@Nonnull String columnName, @Nonnull Object value)
+	public void addColumn(@Nonnull String columnName, @Nullable Object value)
 	{
 		columns.put(columnName, value);
 	}

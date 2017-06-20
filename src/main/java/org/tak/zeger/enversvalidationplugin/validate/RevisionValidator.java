@@ -82,35 +82,47 @@ public class RevisionValidator
 			if (revType == RevisionConstants.REMOVE_REVISION)
 			{
 				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(primaryKeyIdentifier);
+				continue;
 			}
 
-			final TableRow actualRecord = auditedRow.getValue();
-			final Set<String> columnNames = actualRecord.getColumnNames();
-			final Map<String, TableRow> incorrectColumns = new HashMap<>();
-			for (String columnName : columnNames)
-			{
-				final Object auditedValue = lastRecord.getColumnValue(columnName);
-				final Object actualColumnValue = actualRecord.getColumnValue(columnName);
-
-				final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) auditedValue);
-				if (compare != 0)
-				{
-					if (incorrectColumns.isEmpty())
-					{
-						incorrectColumns.put("actual", new TableRow());
-						incorrectColumns.put("audited", new TableRow());
-					}
-
-					incorrectColumns.get("actual").addColumn(columnName, actualColumnValue);
-					incorrectColumns.get("audited").addColumn(columnName, auditedValue);
-				}
-			}
+			final Map<String, TableRow> incorrectColumns = determineIncorrectColumns(auditedRow.getValue(), lastRecord);
 			if (!incorrectColumns.isEmpty())
 			{
 				rowsWithDifferentValues.put(primaryKeyIdentifier, incorrectColumns);
 			}
 		}
 
+		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrUpdateRevision, rowsWithDifferentValues);
+	}
+
+	@Nonnull
+	Map<String, TableRow> determineIncorrectColumns(@Nonnull TableRow actualRecord, @Nonnull TableRow lastRevision)
+	{
+		final Set<String> columnNames = actualRecord.getColumnNames();
+		final Map<String, TableRow> incorrectColumns = new HashMap<>();
+		for (String columnName : columnNames)
+		{
+			final Object auditedValue = lastRevision.getColumnValue(columnName);
+			final Object actualColumnValue = actualRecord.getColumnValue(columnName);
+
+			final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) auditedValue);
+			if (compare != 0)
+			{
+				if (incorrectColumns.isEmpty())
+				{
+					incorrectColumns.put("actual", new TableRow());
+					incorrectColumns.put("audited", new TableRow());
+				}
+
+				incorrectColumns.get("actual").addColumn(columnName, actualColumnValue);
+				incorrectColumns.get("audited").addColumn(columnName, auditedValue);
+			}
+		}
+		return incorrectColumns;
+	}
+
+	void validateLatestRevisionComparisonResult(@Nonnull List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision, @Nonnull Map<String, Map<String, TableRow>> rowsWithDifferentValues)
+	{
 		final StringBuilder errorMessage = new StringBuilder();
 		if (!identifiersWhichShouldHaveAnAddOrUpdateRevision.isEmpty())
 		{
