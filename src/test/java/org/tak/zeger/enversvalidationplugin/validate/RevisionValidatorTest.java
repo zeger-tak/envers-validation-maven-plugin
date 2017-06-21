@@ -439,16 +439,4 @@ public class RevisionValidatorTest
 			//@formatter:on
 		}
 	}
-
-	@Test
-	public void testValidateHistoryIsAValidFlowWithEmptyAuditTable()
-	{
-		// Given
-		final Map<String, TableRow> recordsInAuditedTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
-		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, AUDIT_TABLE, recordsInAuditedTable, recordsInAuditTable));
-
-		// When
-		validator.validateHistoryIsAValidFlow();
-	}
 }

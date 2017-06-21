@@ -40,7 +40,7 @@ public class RevisionValidator
 		this.recordsInAuditTable = recordsInAuditTable;
 	}
 
-	@Parameterized(name = "{index}: auditTableName: {0}", uniqueIdentifier = "{0}")
+	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
 	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
 	{
 		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
@@ -163,44 +163,6 @@ public class RevisionValidator
 		if (errorMessage.length() > 0)
 		{
 			throw new ValidationException(errorMessage.toString());
-		}
-	}
-
-	@Validate
-	public void validateHistoryIsAValidFlow()
-	{
-		final List<String> identifiersWithInvalidHistory = new ArrayList<>(recordsInAuditTable.size());
-		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
-		{
-			boolean existingRecord = false;
-
-			for (TableRow tableRow : auditHistoryPerIdentifier.getValue())
-			{
-				final Object columnValue = tableRow.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
-				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
-				{
-					break;
-				}
-				final int revType = ((BigDecimal) columnValue).intValue();
-				if (!existingRecord && revType != RevisionConstants.ADD_REVISION)
-				{
-					identifiersWithInvalidHistory.add(auditHistoryPerIdentifier.getKey());
-					continue;
-				}
-
-				if (existingRecord && revType == RevisionConstants.ADD_REVISION)
-				{
-					identifiersWithInvalidHistory.add(auditHistoryPerIdentifier.getKey());
-					continue;
-				}
-
-				existingRecord = !(existingRecord && revType == RevisionConstants.REMOVE_REVISION);
-			}
-		}
-
-		if (!identifiersWithInvalidHistory.isEmpty())
-		{
-			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history for the table " + auditedTableName);
 		}
 	}
 }
