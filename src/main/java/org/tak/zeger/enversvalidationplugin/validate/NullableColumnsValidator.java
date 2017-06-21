@@ -22,27 +22,29 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 @ValidationType(TargetPhase.CONSTRAINTS)
 public class NullableColumnsValidator
 {
+	private final ConnectionProviderInstance connectionProvider;
 	private final String tableName;
 	private final List<String> primaryIdentifierColumnNames;
 	private final Set<String> nonNullColumns;
 
-	public NullableColumnsValidator(@Nonnull String tableName, @Nonnull List<String> primaryIdentifierColumnNames, @Nonnull Set<String> nonNullColumns)
+	public NullableColumnsValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String tableName, @Nonnull List<String> primaryIdentifierColumnNames, @Nonnull Set<String> nonNullColumns)
 	{
+		this.connectionProvider = connectionProvider;
 		this.tableName = tableName;
 		this.primaryIdentifierColumnNames = primaryIdentifierColumnNames;
 		this.nonNullColumns = nonNullColumns;
 	}
 
-	@Parameterized(name = "{index}: auditTableName: {0}", uniqueIdentifier = "{0}")
+	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
 	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
 	{
 		final List<Object[]> testData = new ArrayList<>();
 		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
 		{
-			final List<String> primaryIdentifierColumnNames = connectionProvider.getQueries().getPrimaryKeyColumnNames(whiteListEntry.getValue());
+			final List<String> primaryIdentifierColumnNames = connectionProvider.getQueries().getPrimaryKeyColumnNames(whiteListEntry.getKey());
 			final Set<String> nonNullColumns = connectionProvider.getQueries().getAllNonnullColumns(whiteListEntry.getKey());
 
-			testData.add(new Object[] { whiteListEntry.getValue(), primaryIdentifierColumnNames, nonNullColumns });
+			testData.add(new Object[] { connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames, nonNullColumns });
 		}
 
 		return testData;
@@ -51,7 +53,8 @@ public class NullableColumnsValidator
 	@Validate
 	public void validateAllColumnsExceptPrimaryKeyAreNullable()
 	{
-		final Set<String> invalidNonnullColumnNames = nonNullColumns.stream().filter(c -> !primaryIdentifierColumnNames.contains(c)).collect(Collectors.toSet());
+		final String revisionTypeColumnName = connectionProvider.getQueries().getRevTypeColumnName();
+		final Set<String> invalidNonnullColumnNames = nonNullColumns.stream().filter(c -> !primaryIdentifierColumnNames.contains(c) && !revisionTypeColumnName.equals(c)).collect(Collectors.toSet());
 
 		if (!invalidNonnullColumnNames.isEmpty())
 		{

@@ -63,11 +63,11 @@ public class NullableColumnsValidatorTest
 		final String auditTable = "auditTable";
 		final String auditedTable = "auditedTable";
 
-		final List<String> pkColumnNamesAuditedTable = Collections.singletonList(auditedTable);
+		final List<String> pkColumnNamesAuditedTable = Collections.singletonList(auditTable);
 		final Set<String> nonNullColumns = Collections.singleton(auditTable);
 
 		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditTable, auditedTable)));
-		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(pkColumnNamesAuditedTable);
+		when(databaseQueries.getPrimaryKeyColumnNames(auditTable)).thenReturn(pkColumnNamesAuditedTable);
 		when(databaseQueries.getAllNonnullColumns(auditTable)).thenReturn(nonNullColumns);
 
 		// When
@@ -75,9 +75,10 @@ public class NullableColumnsValidatorTest
 
 		// Then
 		assertEquals(1, testData.size());
-		assertEquals(auditedTable, testData.get(0)[0]);
-		assertEquals(pkColumnNamesAuditedTable, testData.get(0)[1]);
-		assertEquals(nonNullColumns, testData.get(0)[2]);
+		assertEquals(connectionProvider, testData.get(0)[0]);
+		assertEquals(auditTable, testData.get(0)[1]);
+		assertEquals(pkColumnNamesAuditedTable, testData.get(0)[2]);
+		assertEquals(nonNullColumns, testData.get(0)[3]);
 	}
 
 	@Test
@@ -88,7 +89,7 @@ public class NullableColumnsValidatorTest
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final Set<String> nonNullColumnNames = Collections.singleton(tableName);
 
-		final NullableColumnsValidator validator = new NullableColumnsValidator(tableName, pkColumnNames, nonNullColumnNames);
+		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, tableName, pkColumnNames, nonNullColumnNames);
 
 		// When
 		validator.validateAllColumnsExceptPrimaryKeyAreNullable();
@@ -105,7 +106,9 @@ public class NullableColumnsValidatorTest
 		nonNullColumnNames.add(tableName);
 		nonNullColumnNames.add(unexpectedNonNullColumnName);
 
-		final NullableColumnsValidator validator = new NullableColumnsValidator(tableName, pkColumnNames, nonNullColumnNames);
+		when(databaseQueries.getRevTypeColumnName()).thenReturn("rev");
+
+		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, tableName, pkColumnNames, nonNullColumnNames);
 
 		try
 		{

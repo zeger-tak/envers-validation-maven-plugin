@@ -110,7 +110,7 @@ public class PostgresQueries extends AbstractQueries
 		final String query =
 				//@formatter:off
 				"select column_name from information_schema.columns " 
-				+ "where table_name = 'revinfo' " 
+				+ "where upper(table_name) = upper('" + tableName + "') " 
 				+ "and is_nullable = 'NO';";
 				//@formatter:on
 

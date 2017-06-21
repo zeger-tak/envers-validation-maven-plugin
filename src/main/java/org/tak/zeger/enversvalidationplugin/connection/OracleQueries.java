@@ -91,7 +91,7 @@ public class OracleQueries extends AbstractQueries
 				//@formatter:off
 				"select column_name" 
 				+ " from user_tab_columns " 
-				+ "where table_name = '" + tableName + "REVINFO' " 
+				+ "where table_name = '" + tableName + "'" 
 				+ "and nullable = 'N'";
 				//@formatter:on
 

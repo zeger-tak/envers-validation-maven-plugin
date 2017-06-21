@@ -86,7 +86,7 @@ public class PrimaryKeyValidator
 
 		if (!actualPrimaryKeyColumnsAuditTable.isEmpty())
 		{
-			throw new ValidationException("The primary key of audit table " + auditTableName + " is comprised of more columns than expected, the following columns were not expected: " + actualPrimaryKeyColumnsAuditTable);
+			throw new ValidationException("The primary key of audit table " + auditTableName + " is comprised of more columns than expected, the following columns were not expected: " + actualPrimaryKeyColumnsAuditTable + " this error may also be thrown if the table to audit has no primary key.");
 		}
 	}
 }

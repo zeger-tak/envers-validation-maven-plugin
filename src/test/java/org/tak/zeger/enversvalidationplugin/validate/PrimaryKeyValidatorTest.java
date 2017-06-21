@@ -139,7 +139,7 @@ public class PrimaryKeyValidatorTest
 		catch (ValidationException e)
 		{
 			// Then
-			assertEquals("The primary key of audit table auditTable is comprised of more columns than expected, the following columns were not expected: [unexpected]", e.getMessage());
+			assertEquals("The primary key of audit table auditTable is comprised of more columns than expected, the following columns were not expected: [unexpected] this error may also be thrown if the table to audit has no primary key.", e.getMessage());
 		}
 	}
 
