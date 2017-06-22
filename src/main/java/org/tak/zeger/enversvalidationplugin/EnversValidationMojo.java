@@ -26,7 +26,7 @@ public class EnversValidationMojo extends AbstractMojo
 	private File connectionPropertyFile;
 
 	@Parameter(property = "whiteListPropertyFile", required = true, readonly = true)
-	private File whiteListPropertyFile;
+	private List<File> whiteListPropertyFile;
 
 	@Parameter(property = "packageToScanForValidators", readonly = true)
 	private List<String> packageToScanForValidators;

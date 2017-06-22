@@ -67,16 +67,20 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	public static Map<String, String> getWhiteList(@Nonnull File file, @Nonnull String auditTablePostFix) throws MojoFailureException
+	public static Map<String, String> getWhiteList(@Nonnull List<File> files, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
-		Properties whiteList = getPropertiesFromFile(file);
-
 		Map<String, String> map = new HashMap<>();
-		for (final String name : whiteList.stringPropertyNames())
+
+		for (File file : files)
 		{
-			final String property = whiteList.getProperty(name);
-			final String auditedTableName = StringUtils.isBlank(property) ? name.replaceAll(auditTablePostFix, "") : property;
-			map.put(name, auditedTableName);
+			Properties whiteList = getPropertiesFromFile(file);
+
+			for (final String name : whiteList.stringPropertyNames())
+			{
+				final String property = whiteList.getProperty(name);
+				final String auditedTableName = StringUtils.isBlank(property) ? name.replaceAll(auditTablePostFix, "") : property;
+				map.put(name, auditedTableName);
+			}
 		}
 
 		return map;
