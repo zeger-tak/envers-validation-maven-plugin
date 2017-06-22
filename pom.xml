@@ -20,6 +20,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<mavenVersion>3.3.9</mavenVersion>
 		<scmVersion>1.9.5</scmVersion>
+		<powermockVersion>1.7.0</powermockVersion>
 	</properties>
 
 	<dependencies>
@@ -116,10 +117,31 @@
 			<version>11.2.0.4</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.powermock/powermock-api-mockito -->
 		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.10.19</version>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-api-mockito</artifactId>
+			<version>${powermockVersion}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.powermock/powermock-module-junit4-rule -->
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-module-junit4-rule</artifactId>
+			<version>${powermockVersion}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.powermock/powermock-classloading-xstream -->
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-classloading-xstream</artifactId>
+			<version>${powermockVersion}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-module-junit4</artifactId>
+			<version>1.6.4</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -246,4 +268,5 @@
 				</pluginManagement>
 			</build>
 		</profile>
-	</profiles></project>
+	</profiles>
+</project>
