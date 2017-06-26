@@ -12,6 +12,9 @@ import org.tak.zeger.enversvalidationplugin.exceptions.DatabaseNotSupportedExcep
 
 public class ConnectionProviderInstance
 {
+	static final String ORACLE_DRIVER = "oracle.jdbc.OracleDriver";
+	static final String POSTGRESQL_DRIVER = "org.postgresql.Driver";
+	
 	private final String driverClass;
 	private final String connectionUrl;
 	private final String username;
@@ -35,7 +38,7 @@ public class ConnectionProviderInstance
 	{
 		try
 		{
-			if (driverClass.equals("oracle.jdbc.OracleDriver"))
+			if (driverClass.equals(ORACLE_DRIVER))
 			{
 				// For Oracle, provide the schema name. Otherwise, metadata for ALL objects is retrieved.
 				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password, username);
@@ -45,7 +48,7 @@ public class ConnectionProviderInstance
 				databaseQueries = new OracleQueries(this);
 				return jdbcDatabaseTester;
 			}
-			else if (driverClass.equals("org.postgresql.Driver"))
+			else if (driverClass.equals(POSTGRESQL_DRIVER))
 			{
 				// For Postgresql
 				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password);
@@ -65,7 +68,7 @@ public class ConnectionProviderInstance
 	}
 
 	@Nonnull
-	public IDatabaseConnection getDatabaseConnection()
+	IDatabaseConnection getDatabaseConnection()
 	{
 		if (databaseConnection == null)
 		{
