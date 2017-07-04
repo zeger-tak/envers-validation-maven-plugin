@@ -121,4 +121,33 @@ public class NullableColumnsValidatorTest
 			assertEquals("The following columns for table tableName have a not null constraint which prevents remove revisions: [unexpectedNonNullColumnName]", e.getMessage());
 		}
 	}
+
+	@Test
+	public void testAllColumnsExceptPrimaryKeyAreNullableWithTwoUnexpectedNonNullColumns()
+	{
+		// Given
+		final String tableName = "tableName";
+		final List<String> pkColumnNames = Collections.singletonList(tableName);
+		final String unexpectedNonNullColumnName1 = "unexpectedNonNullColumnName1";
+		final String unexpectedNonNullColumnName2 = "unexpectedNonNullColumnName2";
+		final Set<String> nonNullColumnNames = new HashSet<>();
+		nonNullColumnNames.add(tableName);
+		nonNullColumnNames.add(unexpectedNonNullColumnName1);
+		nonNullColumnNames.add(unexpectedNonNullColumnName2);
+
+		when(databaseQueries.getRevTypeColumnName()).thenReturn("rev");
+
+		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, tableName, pkColumnNames, nonNullColumnNames);
+
+		try
+		{
+			// When
+			validator.validateAllColumnsExceptPrimaryKeyAreNullable();
+		}
+		catch (ValidationException e)
+		{
+			// Then
+			assertEquals("The following columns for table tableName have a not null constraint which prevents remove revisions: [" + unexpectedNonNullColumnName1 + ", " + unexpectedNonNullColumnName2 + "]", e.getMessage());
+		}
+	}
 }

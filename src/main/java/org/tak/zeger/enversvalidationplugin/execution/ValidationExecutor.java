@@ -33,7 +33,8 @@ public class ValidationExecutor
 
 	// Results
 	private final List<String> validatorsExecutionFailed = new ArrayList<>();
-	private final List<Class> validatorsIgnored = new ArrayList<>();
+	private final List<Class> validatorClassesIgnored = new ArrayList<>();
+	private final List<Method> validatorMethodsIgnored = new ArrayList<>();
 	private int failedTests = 0;
 
 	public ValidationExecutor(@Nonnull Log log, @Nonnull Config config, @Nonnull ConnectionProviderInstance connectionProvider)
@@ -54,7 +55,7 @@ public class ValidationExecutor
 		{
 			if (config.validationShouldBeIgnored(validatorClass))
 			{
-				validatorsIgnored.add(validatorClass);
+				validatorClassesIgnored.add(validatorClass);
 				continue;
 			}
 
@@ -73,8 +74,9 @@ public class ValidationExecutor
 	private void clearResults()
 	{
 		failedTests = 0;
-		validatorsIgnored.clear();
+		validatorClassesIgnored.clear();
 		validatorsExecutionFailed.clear();
+		validatorMethodsIgnored.clear();
 	}
 
 	private void invokeValidationValidators(@Nonnull Log log, @Nonnull Class<?> validatorClass, @Nonnull ConnectionProviderInstance connectionProvider, @Nonnull Map<String, String> whiteList, @Nonnull Set<String> auditTablesInDatabase) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
@@ -93,6 +95,7 @@ public class ValidationExecutor
 					if (config.validationShouldBeIgnored(wrapper, method))
 					{
 						log.info("Ignored validation method " + wrapper.getValidationName(method));
+						validatorMethodsIgnored.add(method);
 						continue;
 					}
 
@@ -107,11 +110,11 @@ public class ValidationExecutor
 					{
 						if (e.getCause() instanceof ValidationException)
 						{
-							log.error(validationName + " failed, due to: " + e.getCause().getMessage(), e.getCause());
+							log.error(validationName + " failed, due to " + e.getCause().getMessage());
 						}
 						else
 						{
-							log.error(validationName + " failed, due to: " + e.getMessage(), e);
+							log.error(validationName + " failed, due to " + e.getMessage());
 						}
 						failedTests++;
 					}
@@ -131,12 +134,21 @@ public class ValidationExecutor
 		}
 		if (!validatorsExecutionFailed.isEmpty())
 		{
-			if (failedTests > 0)
+			if (exceptionMessage.length() > 0)
 			{
 				exceptionMessage.append(" ");
 			}
-			exceptionMessage.append("The following validators were not executed: ");
+			exceptionMessage.append("The following validators were not succesfully executed: ");
 			exceptionMessage.append(validatorsExecutionFailed);
+		}
+		if (!validatorClassesIgnored.isEmpty())
+		{
+			if (exceptionMessage.length() > 1)
+			{
+				exceptionMessage.append(" ");
+			}
+			exceptionMessage.append("The following validators were ignored: ");
+			exceptionMessage.append(validatorClassesIgnored);
 		}
 
 		if (exceptionMessage.length() > 0)
