@@ -101,7 +101,7 @@ public class ValidationExecutor
 					try
 					{
 						method.invoke(validatorInstance);
-						log.info(validationName + " executed sucessfully.");
+						log.debug(validationName + " executed sucessfully.");
 					}
 					catch (IllegalAccessException | InvocationTargetException | ValidationException e)
 					{
