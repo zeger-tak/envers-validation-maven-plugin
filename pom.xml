@@ -33,6 +33,12 @@
 		<powermockVersion>1.7.0</powermockVersion>
 	</properties>
 
+	<scm>
+		<connection>scm:git:git://github.com/zeger-tak/envers-validation-maven-plugin.git</connection>
+		<developerConnection>scm:git:ssh://github.com/zeger-tak/envers-validation-maven-plugin.git</developerConnection>
+		<url>https://github.com/zeger-tak/envers-validation-maven-plugin</url>
+	</scm>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
