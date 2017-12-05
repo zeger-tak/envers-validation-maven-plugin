@@ -78,15 +78,13 @@ public class EnversValidationMojo extends AbstractMojo
 
 		final Map<String, String> whiteList = PropertyUtils.getWhiteList(whiteListPropertyFiles, connectionProvider.getQueries().getAuditTablePostFix());
 
-		getLog().info("whitelistsize" + whiteList.size());
-
 		final Set<String> listOfAuditTablesInDatabase = getListOfAuditTablesInDatabase(connectionProvider);
 		final Config config = new Config(packageToScanForValidators, whiteList, ignorables);
 		try
 		{
 			packageToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
 			final ValidationExecutor validationExecutor = new ValidationExecutor(getLog(), config, connectionProvider);
-			validationExecutor.executeValidations(listOfAuditTablesInDatabase);
+			validationExecutor.executeValidations(getLog(), listOfAuditTablesInDatabase);
 		}
 		catch (Exception e)
 		{

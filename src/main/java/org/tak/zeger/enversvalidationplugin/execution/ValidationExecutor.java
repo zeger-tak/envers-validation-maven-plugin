@@ -44,7 +44,7 @@ public class ValidationExecutor
 		this.connectionProvider = connectionProvider;
 	}
 
-	public void executeValidations(@Nonnull Set<String> auditTablesInDatabase)
+	public void executeValidations(@Nonnull Log log, @Nonnull Set<String> auditTablesInDatabase)
 	{
 		clearResults();
 
@@ -68,7 +68,7 @@ public class ValidationExecutor
 				validatorsExecutionFailed.add(validatorClass.getCanonicalName());
 			}
 		}
-		validateResult();
+		validateResult(log);
 	}
 
 	private void clearResults()
@@ -124,8 +124,13 @@ public class ValidationExecutor
 		}
 	}
 
-	private void validateResult()
+	private void validateResult(@Nonnull Log log)
 	{
+		if (!validatorClassesIgnored.isEmpty())
+		{
+			log.info("The following validators were ignored: " + validatorClassesIgnored);
+		}
+
 		final StringBuilder exceptionMessage = new StringBuilder();
 		if (failedTests > 0)
 		{
@@ -140,15 +145,6 @@ public class ValidationExecutor
 			}
 			exceptionMessage.append("The following validators were not succesfully executed: ");
 			exceptionMessage.append(validatorsExecutionFailed);
-		}
-		if (!validatorClassesIgnored.isEmpty())
-		{
-			if (exceptionMessage.length() > 1)
-			{
-				exceptionMessage.append(" ");
-			}
-			exceptionMessage.append("The following validators were ignored: ");
-			exceptionMessage.append(validatorClassesIgnored);
 		}
 
 		if (exceptionMessage.length() > 0)
