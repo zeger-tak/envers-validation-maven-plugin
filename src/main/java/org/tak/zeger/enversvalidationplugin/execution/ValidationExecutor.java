@@ -110,11 +110,11 @@ public class ValidationExecutor
 					{
 						if (e.getCause() instanceof ValidationException)
 						{
-							log.error(validationName + " failed, due to " + e.getCause().getMessage());
+							log.error(validationName + " failed, with the following message: " + e.getCause().getMessage());
 						}
 						else
 						{
-							log.error(validationName + " failed, due to " + e.getMessage());
+							log.error(validationName + " failed, with the following message: " + e.getMessage());
 						}
 						failedTests++;
 					}

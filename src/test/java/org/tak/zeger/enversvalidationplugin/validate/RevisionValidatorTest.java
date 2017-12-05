@@ -126,7 +126,7 @@ public class RevisionValidatorTest
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following identifiers [auditTable] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all", e.getMessage());
+			assertEquals("The following identifiers [auditTable] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.", e.getMessage());
 		}
 	}
 
@@ -171,7 +171,7 @@ public class RevisionValidatorTest
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following identifiers [auditTable] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all", e.getMessage());
+			assertEquals("The following identifiers [auditTable] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.", e.getMessage());
 			verify(validator, never()).determineIncorrectColumns(any(TableRow.class), any(TableRow.class));
 		}
 	}
@@ -367,7 +367,7 @@ public class RevisionValidatorTest
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following identifiers [identifierWithMissingRevision] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all", e.getMessage());
+			assertEquals("The following identifiers [identifierWithMissingRevision] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.", e.getMessage());
 		}
 	}
 
@@ -399,7 +399,7 @@ public class RevisionValidatorTest
 		{
 			assertEquals(
 					//@formatter:off
-				"The following identifiers [identifierWithMissingRevision] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all. \n" +
+				"The following identifiers [identifierWithMissingRevision] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.\n" +
 						"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the table to audit, the following columns differ: \n" +
 						"\tActual value for column column: actualValue, audited value: auditValue.\n", e.getMessage());
 			//@formatter:on

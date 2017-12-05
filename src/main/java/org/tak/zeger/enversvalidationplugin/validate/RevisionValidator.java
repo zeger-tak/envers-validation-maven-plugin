@@ -130,11 +130,11 @@ public class RevisionValidator
 			errorMessage.append(identifiersWhichShouldHaveAnAddOrUpdateRevision);
 			errorMessage.append(" in table ");
 			errorMessage.append(auditedTableName);
-			errorMessage.append(" do not have an add/update revision table as their last revision or do not have a revision at all");
+			errorMessage.append(" do not have an add/update revision table as their last revision or do not have a revision at all.");
 
 			if (!rowsWithDifferentValues.isEmpty())
 			{
-				errorMessage.append(". \n");
+				errorMessage.append("\n");
 			}
 		}
 
