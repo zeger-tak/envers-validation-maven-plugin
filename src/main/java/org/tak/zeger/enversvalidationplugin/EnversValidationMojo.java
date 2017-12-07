@@ -37,19 +37,6 @@ public class EnversValidationMojo extends AbstractMojo
 	private File connectionPropertyFile;
 
 	/**
-	 * Properties file for listing audit tables.
-	 * Format:
-	 * AUDIT_TABLE_NAME=AUDITED_TABLE.
-	 *
-	 * Where AUDIT_TABLE is a required property key referring to the table holding the revisions
-	 * and AUDITED_TABLE is an optional property value referring to the table holding the current version.
-	 *
-	 * AUDITED_TABLE value will be guessed by removing the default appendix from AUDIT_TABLE
-	 */
-	@Parameter(property = "whiteListPropertyFiles", required = true, readonly = true)
-	private List<File> whiteListPropertyFiles;
-
-	/**
 	 * Used to define packages which hold user defined validators.
 	 * WARNING: Untested feature.
 	 *
@@ -75,9 +62,7 @@ public class EnversValidationMojo extends AbstractMojo
 	public void execute() throws MojoExecutionException, MojoFailureException
 	{
 		final ConnectionProviderInstance connectionProvider = PropertyUtils.getConnectionProperties(connectionPropertyFile);
-
-		final Map<String, String> whiteList = PropertyUtils.getWhiteList(whiteListPropertyFiles, connectionProvider.getQueries().getAuditTablePostFix());
-
+		final Map<String, String> whiteList = PropertyUtils.getWhiteList(connectionProvider.getWhiteListPropertyFile(), connectionProvider.getQueries().getAuditTablePostFix());
 		final Set<String> listOfAuditTablesInDatabase = getListOfAuditTablesInDatabase(connectionProvider);
 		final Config config = new Config(packageToScanForValidators, whiteList, ignorables);
 		try

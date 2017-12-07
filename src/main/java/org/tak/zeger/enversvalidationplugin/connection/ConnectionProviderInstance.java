@@ -14,22 +14,24 @@ public class ConnectionProviderInstance
 {
 	static final String ORACLE_DRIVER = "oracle.jdbc.OracleDriver";
 	static final String POSTGRESQL_DRIVER = "org.postgresql.Driver";
-	
+
 	private final String driverClass;
 	private final String connectionUrl;
 	private final String username;
 	private final String password;
+	private final String whiteListPropertyFile;
 	private final IDatabaseTester databaseTester;
 
 	private IDatabaseConnection databaseConnection;
 	private DatabaseQueries databaseQueries;
 
-	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password)
+	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password, @Nonnull String whiteListPropertyFile)
 	{
 		this.driverClass = driverClass;
 		this.connectionUrl = connectionUrl;
 		this.password = password;
 		this.username = username;
+		this.whiteListPropertyFile = whiteListPropertyFile;
 		databaseTester = newDatabaseTester();
 	}
 
@@ -93,6 +95,12 @@ public class ConnectionProviderInstance
 		}
 
 		return databaseQueries;
+	}
+
+	@Nonnull
+	public String getWhiteListPropertyFile()
+	{
+		return whiteListPropertyFile;
 	}
 
 	@Override

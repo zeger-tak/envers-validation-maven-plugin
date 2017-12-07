@@ -35,11 +35,13 @@ public final class PropertyUtils
 		final String passwordPropertyKey = "password";
 		final String driverClassPropertyKey = "driver";
 		final String connectionUrlPropertyKey = "url";
+		final String whiteListPropertyFilePropertyKey = "whiteListPropertyFile";
 
 		final String username = connectionPropertiesInFile.getProperty(usernamePropertyKey);
 		final String password = connectionPropertiesInFile.getProperty(passwordPropertyKey);
 		final String driverClass = connectionPropertiesInFile.getProperty(driverClassPropertyKey);
 		final String connectionUrl = connectionPropertiesInFile.getProperty(connectionUrlPropertyKey);
+		final String whiteListPropertyFile = connectionPropertiesInFile.getProperty(whiteListPropertyFilePropertyKey);
 
 		final List<String> propertyKeysMissing = new ArrayList<>(4);
 		if (StringUtils.isBlank(username))
@@ -58,29 +60,30 @@ public final class PropertyUtils
 		{
 			propertyKeysMissing.add(connectionUrlPropertyKey);
 		}
+		if (StringUtils.isBlank(whiteListPropertyFile))
+		{
+			propertyKeysMissing.add(whiteListPropertyFilePropertyKey);
+		}
 		if (!propertyKeysMissing.isEmpty())
 		{
 			throw new MojoFailureException("The following required connection are missing from the connection property file: " + propertyKeysMissing);
 		}
 
-		return new ConnectionProviderInstance(connectionUrl, driverClass, username, password);
+		return new ConnectionProviderInstance(connectionUrl, driverClass, username, password, whiteListPropertyFile);
 	}
 
 	@Nonnull
-	public static Map<String, String> getWhiteList(@Nonnull List<File> files, @Nonnull String auditTablePostFix) throws MojoFailureException
+	public static Map<String, String> getWhiteList(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
-		Map<String, String> map = new HashMap<>();
+		final Map<String, String> map = new HashMap<>();
+		final File file = new File(fileName);
+		final Properties whiteList = getPropertiesFromFile(file);
 
-		for (File file : files)
+		for (final String name : whiteList.stringPropertyNames())
 		{
-			Properties whiteList = getPropertiesFromFile(file);
-
-			for (final String name : whiteList.stringPropertyNames())
-			{
-				final String property = whiteList.getProperty(name);
-				final String auditedTableName = StringUtils.isBlank(property) ? name.replaceAll(auditTablePostFix, "") : property;
-				map.put(name, auditedTableName);
-			}
+			final String property = whiteList.getProperty(name);
+			final String auditedTableName = StringUtils.isBlank(property) ? name.replaceAll(auditTablePostFix, "") : property;
+			map.put(name, auditedTableName);
 		}
 
 		return map;
