@@ -3,7 +3,7 @@
 
 	<groupId>com.github.zeger-tak</groupId>
 	<artifactId>envers-validation-maven-plugin</artifactId>
-	<version>0.2</version>
+	<version>0.3-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 	<name>Envers validation Maven plugin</name>
 	<description>This is a Maven plugin that allows for easy validation of database auditing with Hibernate
