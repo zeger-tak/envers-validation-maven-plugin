@@ -21,6 +21,9 @@ import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
+/**
+ * The goal of this validator is described in its {@link Validate} methods:
+ */
 @ValidationType(TargetPhase.CONTENT)
 public class RevisionHistoryValidator
 {
@@ -51,6 +54,19 @@ public class RevisionHistoryValidator
 		return testData;
 	}
 
+	/**
+	 * Validates that all history flows are valid.
+	 * A valid history flow consists of the following:
+	 * - Starts with an Add revision.
+	 * - Followed by 0 or more Update revisions.
+	 * - Ending with a Remove revision.
+	 *
+	 * The following cases are caught by this validator, for each specific primary key:
+	 * - Starts with an Update or Remove revision.
+	 * - An Add revision following after either an Add or an Update revision.
+	 * - Only a Remove revision, or a Remove revision following after another Remove revision.
+	 * - An Update revision following after a Remove revision.
+	 */
 	@Validate
 	public void validateHistoryIsAValidFlow()
 	{

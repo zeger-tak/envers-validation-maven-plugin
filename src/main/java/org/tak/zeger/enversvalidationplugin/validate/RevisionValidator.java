@@ -24,6 +24,9 @@ import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
+/**
+ * The goal of this validator is described in its {@link Validate} methods:
+ */
 @ValidationType(TargetPhase.CONTENT)
 public class RevisionValidator
 {
@@ -57,6 +60,13 @@ public class RevisionValidator
 		return testData;
 	}
 
+	/**
+	 * Validates all records in content table have a valid latest revision, meaning:
+	 * - Record is of type Add/Update.
+	 * - Record values in audit table fully match the record values in the content table.
+	 * - The audit table may have columns which are not present in the content table.
+	 * - The content table may not have columns which are not present in the audit table.
+	 */
 	@Validate
 	public void validateAllRecordsInAuditedTableHaveAValidLatestRevision()
 	{

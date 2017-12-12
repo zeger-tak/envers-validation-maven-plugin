@@ -17,6 +17,9 @@ import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
+/**
+ * The goal of this validator is described in its {@link Validate} methods:
+ */
 @ValidationType(TargetPhase.TABLE_STRUCTURE)
 public class AuditTableWhiteListValidator
 {
@@ -29,6 +32,9 @@ public class AuditTableWhiteListValidator
 	@ConnectionProvider
 	private ConnectionProviderInstance connectionProvider;
 
+	/**
+	 * Validates that all audit tables present in the database are specified in the whitelist.
+	 */
 	@Validate
 	public void validateAllExistingAuditTablesAreWhiteListed()
 	{
@@ -43,6 +49,9 @@ public class AuditTableWhiteListValidator
 		}
 	}
 
+	/**
+	 * Validates that all audit tables specified in the whitelist exist in the database.
+	 */
 	@Validate
 	public void validateAllWhiteListedAuditTablesExist()
 	{
@@ -57,6 +66,10 @@ public class AuditTableWhiteListValidator
 		}
 	}
 
+	/**
+	 * Validates that all whitelisted audit tables audit an existing content table.
+	 * I.e. if TEMP_TABLE_AUD=TEMP_TABLE is specified in the whitelist, but TEMP_TABLE does not exist in the database, this validator will fail.
+	 */
 	@Validate
 	public void validateAllWhiteListedAuditTablesAuditAnExistingTable() throws SQLException, DataSetException
 	{

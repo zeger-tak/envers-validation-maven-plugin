@@ -19,6 +19,9 @@ import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
+/**
+ * The goal of this validator is described in its {@link Validate} methods:
+ */
 @ValidationType(TargetPhase.CONSTRAINTS)
 public class NullableColumnsValidator
 {
@@ -50,6 +53,9 @@ public class NullableColumnsValidator
 		return testData;
 	}
 
+	/**
+	 * Validates that all columns in the audit table are nullable except for the columns that make up the primary key.
+	 */
 	@Validate
 	public void validateAllColumnsExceptPrimaryKeyAreNullable()
 	{

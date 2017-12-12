@@ -20,6 +20,9 @@ import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstanc
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
+/**
+ * The goal of this validator is described in its {@link Validate} methods:
+ */
 @ValidationType(TargetPhase.CONSTRAINTS)
 public class PrimaryKeyValidator
 {
@@ -55,6 +58,13 @@ public class PrimaryKeyValidator
 		return testData;
 	}
 
+	/**
+	 * Validates that the primary of the audit table is valid.
+	 * A valid primary key for an audit table consists of:
+	 * - The columns matching the primary key columns of the content table.
+	 * - The column holding a foreign key to the revision table.
+	 * - The column holding the revision type value (Add/Update/Remove)
+	 */
 	@Validate
 	public void validateAuditTableHasAValidPrimaryKey()
 	{

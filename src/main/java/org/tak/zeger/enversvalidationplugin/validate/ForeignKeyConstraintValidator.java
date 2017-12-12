@@ -14,6 +14,9 @@ import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
+/**
+ * The goal of this validator is described in its {@link Validate} methods:
+ */
 @ValidationType(TargetPhase.CONSTRAINTS)
 public class ForeignKeyConstraintValidator
 {
@@ -23,6 +26,10 @@ public class ForeignKeyConstraintValidator
 	@ConnectionProvider
 	private ConnectionProviderInstance connectionProvider;
 
+	/**
+	 * Validates that no table has a foreign key to the revision table except for the whitelisted audit tables.
+	 * This validator will catch cases not caught by {@link AuditTableWhiteListValidator}.
+	 */
 	@Validate
 	public void validateNoForeignKeysExistsForNonWhiteListedTables() throws SQLException, DataSetException
 	{
@@ -36,6 +43,9 @@ public class ForeignKeyConstraintValidator
 		}
 	}
 
+	/**
+	 * Validates that all whitelisted audit tables have a foreign key to the revision table.
+	 */
 	@Validate
 	public void validateAllAuditTablesHaveAForeignKeyToRevisionTable() throws SQLException, DataSetException
 	{
