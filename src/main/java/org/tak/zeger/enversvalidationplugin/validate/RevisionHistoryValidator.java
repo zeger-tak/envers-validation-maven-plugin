@@ -61,14 +61,14 @@ public class RevisionHistoryValidator
 	 * Validates that all history flows are valid.
 	 * A valid history flow consists of the following:
 	 * - Starts with an Add revision.
-	 * - Followed by 0 or more Update revisions.
+	 * - Followed by 0 or more Modify revisions.
 	 * - Ending with a Remove revision.
 	 *
 	 * The following cases are caught by this validator, for each specific primary key:
-	 * - Starts with an Update or Remove revision.
-	 * - An Add revision following after either an Add or an Update revision.
+	 * - Starts with an Modify or Remove revision.
+	 * - An Add revision following after either an Add or an Modify revision.
 	 * - Only a Remove revision, or a Remove revision following after another Remove revision.
-	 * - An Update revision following after a Remove revision.
+	 * - An Modify revision following after a Remove revision.
 	 */
 	@Validate
 	public void validateHistoryIsAValidFlow()
@@ -109,12 +109,12 @@ public class RevisionHistoryValidator
 	}
 
 	/**
-	 * Validates that the latest revision for each primary key is not an Add/Update revision if there is no corresponding record in the content table.
+	 * Validates that the latest revision for each primary key is not an Add/Modify revision if there is no corresponding record in the content table.
 	 */
 	@Validate
-	public void validateLatestAddOrUpdateRevisionRefersToExistingContent()
+	public void validateLatestAddOrModifyRevisionRefersToExistingContent()
 	{
-		final List<String> recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent = new ArrayList<>(recordsInAuditTable.size());
+		final List<String> recordsWithAnAddOrModifyLatestRevisionButNoExistingContent = new ArrayList<>(recordsInAuditTable.size());
 		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
 		{
 			final List<TableRow> historyFlow = auditHistoryPerIdentifier.getValue();
@@ -139,13 +139,13 @@ public class RevisionHistoryValidator
 			final TableRow contentTableRow = recordsInAuditedTableIdentifiedByPK.get(auditHistoryPerIdentifier.getKey());
 			if (contentTableRow == null)
 			{
-				recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent.add(auditHistoryPerIdentifier.getKey());
+				recordsWithAnAddOrModifyLatestRevisionButNoExistingContent.add(auditHistoryPerIdentifier.getKey());
 			}
 		}
 
-		if (!recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent.isEmpty())
+		if (!recordsWithAnAddOrModifyLatestRevisionButNoExistingContent.isEmpty())
 		{
-			throw new ValidationException("The following identifiers " + recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent + " have a latest revision of type Add/Update but have no record present in content table " + auditedTableName + ".");
+			throw new ValidationException("The following identifiers " + recordsWithAnAddOrModifyLatestRevisionButNoExistingContent + " have a latest revision of type Add/Modify but have no record present in content table " + auditedTableName + ".");
 		}
 	}
 }

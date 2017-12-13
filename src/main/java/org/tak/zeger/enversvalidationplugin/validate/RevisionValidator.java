@@ -62,7 +62,7 @@ public class RevisionValidator
 
 	/**
 	 * Validates all records in content table have a valid latest revision, meaning:
-	 * - Record is of type Add/Update.
+	 * - Record is of type Add/Modify.
 	 * - Record values in audit table fully match the record values in the content table.
 	 * - The audit table may have columns which are not present in the content table.
 	 * - The content table may not have columns which are not present in the audit table.
@@ -70,7 +70,7 @@ public class RevisionValidator
 	@Validate
 	public void validateAllRecordsInAuditedTableHaveAValidLatestRevision()
 	{
-		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = new ArrayList<>(recordsInAuditedTableIdentifiedByPK.size());
+		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = new ArrayList<>(recordsInAuditedTableIdentifiedByPK.size());
 		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = new HashMap<>();
 		for (Map.Entry<String, TableRow> auditedRow : recordsInAuditedTableIdentifiedByPK.entrySet())
 		{
@@ -78,7 +78,7 @@ public class RevisionValidator
 			final List<TableRow> auditHistoryValue = recordsInAuditTable.get(primaryKeyIdentifier);
 			if (auditHistoryValue == null)
 			{
-				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(primaryKeyIdentifier);
+				identifiersWhichShouldHaveAnAddOrModifyRevision.add(primaryKeyIdentifier);
 				continue;
 			}
 
@@ -91,7 +91,7 @@ public class RevisionValidator
 			final int revType = ((BigDecimal) columnValue).intValue();
 			if (revType == RevisionConstants.REMOVE_REVISION)
 			{
-				identifiersWhichShouldHaveAnAddOrUpdateRevision.add(primaryKeyIdentifier);
+				identifiersWhichShouldHaveAnAddOrModifyRevision.add(primaryKeyIdentifier);
 				continue;
 			}
 
@@ -102,7 +102,7 @@ public class RevisionValidator
 			}
 		}
 
-		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrUpdateRevision, rowsWithDifferentValues);
+		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
 	@Nonnull
@@ -131,16 +131,16 @@ public class RevisionValidator
 		return incorrectColumns;
 	}
 
-	void validateLatestRevisionComparisonResult(@Nonnull List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision, @Nonnull Map<String, Map<String, TableRow>> rowsWithDifferentValues)
+	void validateLatestRevisionComparisonResult(@Nonnull List<String> identifiersWhichShouldHaveAnAddOrModifyRevision, @Nonnull Map<String, Map<String, TableRow>> rowsWithDifferentValues)
 	{
 		final StringBuilder errorMessage = new StringBuilder();
-		if (!identifiersWhichShouldHaveAnAddOrUpdateRevision.isEmpty())
+		if (!identifiersWhichShouldHaveAnAddOrModifyRevision.isEmpty())
 		{
 			errorMessage.append("The following identifiers ");
-			errorMessage.append(identifiersWhichShouldHaveAnAddOrUpdateRevision);
+			errorMessage.append(identifiersWhichShouldHaveAnAddOrModifyRevision);
 			errorMessage.append(" in table ");
 			errorMessage.append(auditedTableName);
-			errorMessage.append(" do not have an add/update revision table as their last revision or do not have a revision at all.");
+			errorMessage.append(" do not have an Add/Modify revision table as their last revision or do not have a revision at all.");
 
 			if (!rowsWithDifferentValues.isEmpty())
 			{

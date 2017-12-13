@@ -126,7 +126,7 @@ public class RevisionValidatorTest
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following identifiers [auditTable] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.", e.getMessage());
+			assertEquals("The following identifiers [auditTable] in table auditTable do not have an Add/Modify revision table as their last revision or do not have a revision at all.", e.getMessage());
 		}
 	}
 
@@ -171,7 +171,7 @@ public class RevisionValidatorTest
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following identifiers [auditTable] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.", e.getMessage());
+			assertEquals("The following identifiers [auditTable] in table auditTable do not have an Add/Modify revision table as their last revision or do not have a revision at all.", e.getMessage());
 			verify(validator, never()).determineIncorrectColumns(any(TableRow.class), any(TableRow.class));
 		}
 	}
@@ -197,7 +197,7 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionAuditTableWithInvalidUpdateRevision()
+	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionAuditTableWithInvalidModifyRevision()
 	{
 		// Given
 		final String auditTableName = "auditTableName";
@@ -338,23 +338,23 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testValidateLatestRevisionComparisonResultWithNomissingAddOrUpdateRevisionsAndNoRowsWithDifferentValues()
+	public void testValidateLatestRevisionComparisonResultWithNomissingAddOrModifyRevisionsAndNoRowsWithDifferentValues()
 	{
 		// Given
-		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = Collections.emptyList();
+		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = Collections.emptyList();
 		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = Collections.emptyMap();
 
 		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, AUDIT_TABLE, mock(Map.class), mock(Map.class)));
 
 		// When
-		validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrUpdateRevision, rowsWithDifferentValues);
+		validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
 	@Test
 	public void testValidateLatestRevisionComparisonResultWithOneIDWithMissingRevisionAndNoRowsWithDifferentValues()
 	{
 		// Given
-		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = Collections.singletonList("identifierWithMissingRevision");
+		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = Collections.singletonList("identifierWithMissingRevision");
 		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = Collections.emptyMap();
 
 		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, AUDIT_TABLE, mock(Map.class), mock(Map.class)));
@@ -362,12 +362,12 @@ public class RevisionValidatorTest
 		try
 		{
 			// When
-			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrUpdateRevision, rowsWithDifferentValues);
+			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 			fail("Expected " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following identifiers [identifierWithMissingRevision] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.", e.getMessage());
+			assertEquals("The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision table as their last revision or do not have a revision at all.", e.getMessage());
 		}
 	}
 
@@ -375,7 +375,7 @@ public class RevisionValidatorTest
 	public void testValidateLatestRevisionComparisonResultWithOneIDWithMissingRevisionAndOneRowWithDifferentValues()
 	{
 		// Given
-		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = Collections.singletonList("identifierWithMissingRevision");
+		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = Collections.singletonList("identifierWithMissingRevision");
 
 		final TableRow actualTableRow = new TableRow();
 		actualTableRow.addColumn("column", "actualValue");
@@ -392,14 +392,14 @@ public class RevisionValidatorTest
 		try
 		{
 			// When
-			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrUpdateRevision, rowsWithDifferentValues);
+			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 			fail("Expected " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
 		{
 			assertEquals(
 					//@formatter:off
-				"The following identifiers [identifierWithMissingRevision] in table auditTable do not have an add/update revision table as their last revision or do not have a revision at all.\n" +
+				"The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision table as their last revision or do not have a revision at all.\n" +
 						"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the table to audit, the following columns differ: \n" +
 						"\tActual value for column column: actualValue, audited value: auditValue.\n", e.getMessage());
 			//@formatter:on
@@ -410,7 +410,7 @@ public class RevisionValidatorTest
 	public void testValidateLatestRevisionComparisonResultWithNoIDWithMissingRevisionAndOneRowWithDifferentValues()
 	{
 		// Given
-		final List<String> identifiersWhichShouldHaveAnAddOrUpdateRevision = Collections.emptyList();
+		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = Collections.emptyList();
 
 		final TableRow actualTableRow = new TableRow();
 		actualTableRow.addColumn("column", "actualValue");
@@ -427,7 +427,7 @@ public class RevisionValidatorTest
 		try
 		{
 			// When
-			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrUpdateRevision, rowsWithDifferentValues);
+			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 			fail("Expected " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)

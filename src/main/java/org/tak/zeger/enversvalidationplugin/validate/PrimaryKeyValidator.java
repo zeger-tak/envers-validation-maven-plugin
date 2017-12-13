@@ -63,7 +63,7 @@ public class PrimaryKeyValidator
 	 * A valid primary key for an audit table consists of:
 	 * - The columns matching the primary key columns of the content table.
 	 * - The column holding a foreign key to the revision table.
-	 * - The column holding the revision type value (Add/Update/Remove)
+	 * - The column holding the revision type value (Add/Modify/Remove)
 	 */
 	@Validate
 	public void validateAuditTableHasAValidPrimaryKey()
