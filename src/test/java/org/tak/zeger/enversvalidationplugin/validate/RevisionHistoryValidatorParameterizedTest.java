@@ -32,14 +32,16 @@ public class RevisionHistoryValidatorParameterizedTest
 	private static final String REV_COLUMN = "rev";
 
 	private final RevisionHistoryValidator validator;
-	private final String expectedExceptionMessage;
+	private final String expectedExceptionMessageValidFlow;
 	private final ConnectionProviderInstance connectionProvider;
+	private final String expectedExceptionMessageAddOrUpdateContentTest;
 
-	public RevisionHistoryValidatorParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nullable String expectedExceptionMessage)
+	public RevisionHistoryValidatorParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrUpdateContentTest)
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
-		validator = new RevisionHistoryValidator(connectionProvider, "auditTableName", recordsInAuditTable);
-		this.expectedExceptionMessage = expectedExceptionMessage;
+		validator = new RevisionHistoryValidator(connectionProvider, "auditTableName", recordsInAuditTable, recordsInAuditedTable);
+		this.expectedExceptionMessageValidFlow = expectedExceptionMessageValidFlow;
+		this.expectedExceptionMessageAddOrUpdateContentTest = expectedExceptionMessageAddOrUpdateContentTest;
 	}
 
 	@Before
@@ -55,10 +57,13 @@ public class RevisionHistoryValidatorParameterizedTest
 	{
 		final String id1 = "primaryId1";
 		final String id2 = "primaryId2";
-		final String expectedExceptionMessageId1 = "The following identifiers [" + id1 + "] have an invalid audit history for the table auditTableName";
-		final String expectedExceptionMessageId2 = "The following identifiers [" + id2 + "] have an invalid audit history for the table auditTableName";
-		final String expectedExceptionMessageId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have an invalid audit history for the table auditTableName";
+		final String expectedExceptionMessageValidFlowId1 = "The following identifiers [" + id1 + "] have an invalid audit history for the table auditTableName";
+		final String expectedExceptionMessageValidFlowId2 = "The following identifiers [" + id2 + "] have an invalid audit history for the table auditTableName";
+		final String expectedExceptionMessageValidFlowId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have an invalid audit history for the table auditTableName";
 
+		final String expectedExceptionMessageAddUpdateId1 = "The following identifiers [" + id1 + "] have a latest revision of type Add/Update but have no record present in content table auditTableName.";
+		final String expectedExceptionMessageAddUpdateId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have a latest revision of type Add/Update but have no record present in content table auditTableName.";
+		
 		final TableRow addRevision = createAddRevision();
 		final TableRow modifyRevision = createModifyRevision();
 		final TableRow removeRevision = createRemoveRevision();
@@ -86,54 +91,59 @@ public class RevisionHistoryValidatorParameterizedTest
 		return Arrays.asList(new Object[][] {
 				//@formatter:off
 				// No history records
-				{"noHistoryAtAll", Collections.emptyMap(), null},
-				{"noHistoryButFoundTableName", 		Collections.singletonMap(id1,		Collections.emptyList()),	 null},
+				{"noHistoryAtAll",                  Collections.emptyMap(),                                                                      Collections.emptyMap(),   null, null},
+				{"noHistoryButFoundTableName", 		Collections.singletonMap(id1, Collections.emptyList()),                                      Collections.emptyMap(),   null, null},
 				
 				// Single rows
-				{"onlyAdd",				Collections.singletonMap(id1, Collections.singletonList(addRevision)), 				null},
-				{"onlyModify",			Collections.singletonMap(id1, Collections.singletonList(modifyRevision)), 			expectedExceptionMessageId1},
-				{"onlyRemove",			Collections.singletonMap(id1, Collections.singletonList(removeRevision)), 			expectedExceptionMessageId1},
-				{"onlyDoNotValidate",	Collections.singletonMap(id1, Collections.singletonList(doNotValidateRevision)),	null},
+				{"onlyAdd",				            Collections.singletonMap(id1, Collections.singletonList(addRevision)), 				          Collections.emptyMap(),  null, expectedExceptionMessageAddUpdateId1},
+				{"onlyModify",			            Collections.singletonMap(id1, Collections.singletonList(modifyRevision)), 			          Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"onlyRemove",			            Collections.singletonMap(id1, Collections.singletonList(removeRevision)), 			          Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
+				{"onlyDoNotValidate",	            Collections.singletonMap(id1, Collections.singletonList(doNotValidateRevision)),	          Collections.emptyMap(),  null, null},
 				// "Do not validate" revisions will not be included in the testcases below, as databaseQueries.getRevTypeColumnName is expected to be nonnull
 				
-				// Two rows for one identifier
-				{"firstAddThenAnotherAdd",			Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision)),			expectedExceptionMessageId1},
-				{"firstAddThenModify",				Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision)),		null},
-				{"firstAddThenRemove",				Collections.singletonMap(id1, Arrays.asList(addRevision, removeRevision)),		null},
-				{"firstModifyThenAdd",				Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstModifyThenAnotherModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, modifyRevision)),	expectedExceptionMessageId1},
-				{"firstModifyThenRemove",			Collections.singletonMap(id1, Arrays.asList(modifyRevision, removeRevision)),	expectedExceptionMessageId1},
-				{"firstRemoveThenAdd",				Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstRemoveThenModify",			Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstRemoveThenRemove",			Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		expectedExceptionMessageId1},
+				// Two rows for one identifier 
+				{"firstAddThenAnotherAdd",			Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision)),			              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstAddThenModify",				Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision)),		              Collections.emptyMap(),  null, expectedExceptionMessageAddUpdateId1},
+				{"firstAddThenRemove",				Collections.singletonMap(id1, Arrays.asList(addRevision, removeRevision)),		              Collections.emptyMap(),  null, null},
+				{"firstModifyThenAdd",				Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstModifyThenAnotherModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, modifyRevision)),	              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstModifyThenRemove",			Collections.singletonMap(id1, Arrays.asList(modifyRevision, removeRevision)),	              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
+				{"firstRemoveThenAdd",				Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstRemoveThenModify",			Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstRemoveThenRemove",			Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
 				
 				// Three rows for one identifier
-				{"firstAddThenAddThenAdd",			Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstAddThenAddThenModify",		Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, modifyRevision)),		expectedExceptionMessageId1},
-				{"firstAddThenAddThenRemove",		Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, removeRevision)),		expectedExceptionMessageId1},
-				{"firstAddThenModifyThenAdd",		Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstAddThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, modifyRevision)),	null},
-				{"firstAddThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, removeRevision)),	null},
+				{"firstAddThenAddThenAdd",			Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstAddThenAddThenModify",		Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, modifyRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstAddThenAddThenRemove",		Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, removeRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
+				{"firstAddThenModifyThenAdd",		Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstAddThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, modifyRevision)),	  Collections.emptyMap(),  null, expectedExceptionMessageAddUpdateId1},
+				{"firstAddThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, removeRevision)),	  Collections.emptyMap(),  null, null},
 				
-				{"firstModifyThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstModifyThenAddThenModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, modifyRevision)),	expectedExceptionMessageId1},
-				{"firstModifyThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, removeRevision)),	expectedExceptionMessageId1},
-				{"firstModifyThenModifyThenAdd",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstModifyThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, modifyRevision)),	expectedExceptionMessageId1},
-				{"firstModifyThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, removeRevision)),	expectedExceptionMessageId1},
+				{"firstModifyThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstModifyThenAddThenModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, modifyRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstModifyThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, removeRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
+				{"firstModifyThenModifyThenAdd",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstModifyThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, modifyRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstModifyThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, removeRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
 				
-				{"firstRemoveThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, addRevision)),			expectedExceptionMessageId1},
-				{"firstRemoveThenAddThenModify",	Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, modifyRevision)),		expectedExceptionMessageId1},
-				{"firstRemoveThenAddThenRemove",	Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, removeRevision)),		expectedExceptionMessageId1},
-				{"firstRemoveThenModifyThenAdd",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, addRevision)),		expectedExceptionMessageId1},
-				{"firstRemoveThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, modifyRevision)),	expectedExceptionMessageId1},
-				{"firstRemoveThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, removeRevision)),	expectedExceptionMessageId1},
+				{"firstRemoveThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, addRevision)),       Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstRemoveThenAddThenModify",	Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, modifyRevision)),    Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstRemoveThenAddThenRemove",	Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, removeRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
+				{"firstRemoveThenModifyThenAdd",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, addRevision)),    Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstRemoveThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, modifyRevision)), Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1},
+				{"firstRemoveThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, removeRevision)), Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
 				
 				// One rows for two identifiers
-				{"firstIdentifierValidHistorySecondIdentifierValidHistory",		validHistory1ValidHistory2,		null},
-				{"firstIdentifierValidHistorySecondIdentifierInvalidHistory",	validHistory1InvalidHistory2,	expectedExceptionMessageId2},
-				{"firstIdentifierInvalidHistorySecondIdentifierInvalidHistory",	invalidHistory1ValidHistory2,	expectedExceptionMessageId1},
-				{"firstIdentifierInvalidHistorySecondIdentifierInvalidHistory",	invalidHistory1InvalidHistory2,	expectedExceptionMessageId1And2},
+				{"firstIdentifierValidHistorySecondIdentifierValidHistory",		validHistory1ValidHistory2,		                                  Collections.emptyMap(),  null, expectedExceptionMessageAddUpdateId1And2},
+				{"firstIdentifierValidHistorySecondIdentifierInvalidHistory",	validHistory1InvalidHistory2,	                                  Collections.emptyMap(),  expectedExceptionMessageValidFlowId2, expectedExceptionMessageAddUpdateId1And2},
+				{"firstIdentifierInvalidHistorySecondIdentifierInvalidHistory",	invalidHistory1ValidHistory2,	                                  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddUpdateId1And2},
+				{"firstIdentifierInvalidHistorySecondIdentifierInvalidHistory",	invalidHistory1InvalidHistory2,	                                  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1And2, expectedExceptionMessageAddUpdateId1And2},
+				
+				// Valid history with latest add/update and matching content in content table.
+				{"addAndMatchingContent",	        Collections.singletonMap(id1, Collections.singletonList(addRevision)),                        Collections.singletonMap(id1, doNotValidateRevision), null, null},
+				{"modifyAndMatchingContent",	    Collections.singletonMap(id1, Collections.singletonList(modifyRevision)),                     Collections.singletonMap(id1, doNotValidateRevision), expectedExceptionMessageValidFlowId1, null},
+				{"removeAndMatchingContent",	    Collections.singletonMap(id1, Collections.singletonList(modifyRevision)),                     Collections.singletonMap(id1, doNotValidateRevision), expectedExceptionMessageValidFlowId1, null},
 			//@formatter:on
 		});
 	}
@@ -171,9 +181,9 @@ public class RevisionHistoryValidatorParameterizedTest
 	}
 
 	@Test
-	public void test()
+	public void testValidateHistoryIsAValidFlow()
 	{
-		if (expectedExceptionMessage == null)
+		if (expectedExceptionMessageValidFlow == null)
 		{
 			validator.validateHistoryIsAValidFlow();
 		}
@@ -182,11 +192,32 @@ public class RevisionHistoryValidatorParameterizedTest
 			try
 			{
 				validator.validateHistoryIsAValidFlow();
-				fail("Expected a " + ValidationException.class.getSimpleName() + " with the following message " + expectedExceptionMessage);
+				fail("Expected a " + ValidationException.class.getSimpleName() + " with the following message " + expectedExceptionMessageValidFlow);
 			}
 			catch (ValidationException e)
 			{
-				assertEquals("Caught a " + ValidationException.class.getSimpleName() + " as expected, but exception message was different: ", expectedExceptionMessage, e.getMessage());
+				assertEquals("Caught a " + ValidationException.class.getSimpleName() + " as expected, but exception message was different: ", expectedExceptionMessageValidFlow, e.getMessage());
+			}
+		}
+	}
+
+	@Test
+	public void testValidateLatestAddOrUpdateRevisionRefersToExistingContent()
+	{
+		if (expectedExceptionMessageAddOrUpdateContentTest == null)
+		{
+			validator.validateLatestAddOrUpdateRevisionRefersToExistingContent();
+		}
+		else
+		{
+			try
+			{
+				validator.validateLatestAddOrUpdateRevisionRefersToExistingContent();
+				fail("Expected a " + ValidationException.class.getSimpleName() + " with the following message " + expectedExceptionMessageAddOrUpdateContentTest);
+			}
+			catch (ValidationException e)
+			{
+				assertEquals("Caught a " + ValidationException.class.getSimpleName() + " as expected, but exception message was different: ", expectedExceptionMessageAddOrUpdateContentTest, e.getMessage());
 			}
 		}
 	}

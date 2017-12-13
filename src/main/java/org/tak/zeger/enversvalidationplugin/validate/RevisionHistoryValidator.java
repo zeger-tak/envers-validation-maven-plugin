@@ -30,12 +30,14 @@ public class RevisionHistoryValidator
 	private final ConnectionProviderInstance connectionProvider;
 	private final String auditedTableName;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
+	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
 
-	public RevisionHistoryValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditedTableName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable)
+	public RevisionHistoryValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditedTableName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
 	{
 		this.connectionProvider = connectionProvider;
 		this.auditedTableName = auditedTableName;
 		this.recordsInAuditTable = recordsInAuditTable;
+		this.recordsInAuditedTableIdentifiedByPK = recordsInAuditedTableIdentifiedByPK;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
@@ -47,8 +49,9 @@ public class RevisionHistoryValidator
 		{
 			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue());
 
+			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
 			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
-			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), recordsInAuditTableGroupedById });
+			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), recordsInAuditTableGroupedById, recordsInAuditedTableById });
 		}
 
 		return testData;
@@ -102,6 +105,47 @@ public class RevisionHistoryValidator
 		if (!identifiersWithInvalidHistory.isEmpty())
 		{
 			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history for the table " + auditedTableName);
+		}
+	}
+
+	/**
+	 * Validates that the latest revision for each primary key is not an Add/Update revision if there is no corresponding record in the content table.
+	 */
+	@Validate
+	public void validateLatestAddOrUpdateRevisionRefersToExistingContent()
+	{
+		final List<String> recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent = new ArrayList<>(recordsInAuditTable.size());
+		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
+		{
+			final List<TableRow> historyFlow = auditHistoryPerIdentifier.getValue();
+			if (historyFlow.isEmpty())
+			{
+				continue;
+			}
+
+			final TableRow latestRevision = historyFlow.get(historyFlow.size() - 1);
+
+			final Object columnValue = latestRevision.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
+			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
+			{
+				continue;
+			}
+			final int revType = ((BigDecimal) columnValue).intValue();
+			if (revType == RevisionConstants.REMOVE_REVISION)
+			{
+				continue;
+			}
+
+			final TableRow contentTableRow = recordsInAuditedTableIdentifiedByPK.get(auditHistoryPerIdentifier.getKey());
+			if (contentTableRow == null)
+			{
+				recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent.add(auditHistoryPerIdentifier.getKey());
+			}
+		}
+
+		if (!recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent.isEmpty())
+		{
+			throw new ValidationException("The following identifiers " + recordsWithAnAddOrUpdateLatestRevisionButNoExistingContent + " have a latest revision of type Add/Update but have no record present in content table " + auditedTableName + ".");
 		}
 	}
 }

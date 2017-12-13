@@ -6,17 +6,20 @@ I.e. in databases where DBA sometimes runs a custom scrip to fix high priority i
 
 ## What the plugin does
 The plugin connects with your database and will inform you of the following:
-- If one or more audit tables specified in the whitelist are not present in the database.
-- If a table exists with a name that ends in _AUD but the table name is not present in the whitelist, assuming that only audit tables end in _AUD.
-- If a table was found with a foreign key to the revinfo table but the table name is not present in the whitelist.
-- If an audit table exists but the content table does not.
-- A primary key for an audit table which does not match with the primary key of the content table. (Primary key of an audit table should consist of the primary key columns of the content table + the rev column.)
-- An audit table does not have a foreign key to the revinfo table.
-- If a column in the audit table is nonnull but the column is not part of the primary key, as this prevents Envers from inserting 'REMOVE' revisions.
-- If the history of a specific record is invalid. For example: Starting with an update or remove revision, as these can only exist after an add revision and indicates missing revisions.
-- If the current content is incorrectly represented by the latest record. For example:
+- Any unknown audit or content table
+    - If one or more audit tables specified in the whitelist are not present in the database.
+    - If a table exists with a name that ends in _AUD but the table name is not present in the whitelist, assuming that only audit tables end in _AUD.
+    - If a table was found with a foreign key to the revinfo table but the table name is not present in the whitelist.
+    - If an audit table exists but the content table does not.
+- Incorrect structure of the audit table
+    - A primary key for an audit table which does not match with the primary key of the content table. (Primary key of an audit table should consist of the primary key columns of the content table + the rev column.)
+    - An audit table does not have a foreign key to the revinfo table.
+    - If a column in the audit table is nonnull but the column is not part of the primary key, as this prevents Envers from inserting 'Remove' revisions.
+- Incorrect revisions, for example:
+    - If the history of a specific record is invalid. For example: Starting with an 'Modify' or 'Remove' revision, as these can only exist after an 'Add' revision and indicates missing revisions.
     - If the content has a column 'ENABLED' and the value of this column = 'true', but the latest revision has a value of 'false' then a validation error will be thrown.
-    - The content no longer exists in the content table, but the latest revision for the primary key is 'Add' or 'Update' instead of 'Remove'  
+    - The content no longer exists in the content table, but the latest revision for the primary key is 'Add' or 'Modify' instead of 'Remove'.
+    - The latest revision is 'Remove' but there is still a record in the content table.  
 
 ## How to use the plugin
 ### Pom.xml

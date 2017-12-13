@@ -85,7 +85,8 @@ public class RevisionHistoryValidatorTest
 	{
 		// Given
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
-		final RevisionHistoryValidator validator = spy(new RevisionHistoryValidator(connectionProvider, AUDIT_TABLE, recordsInAuditTable));
+		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final RevisionHistoryValidator validator = spy(new RevisionHistoryValidator(connectionProvider, AUDIT_TABLE, recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		validator.validateHistoryIsAValidFlow();
