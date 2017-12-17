@@ -17,6 +17,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -26,28 +27,28 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class NullableColumnsValidator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final String tableName;
+	private final WhitelistEntry whitelistEntry;
 	private final List<String> primaryIdentifierColumnNames;
 	private final Set<String> nonNullColumns;
 
-	public NullableColumnsValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String tableName, @Nonnull List<String> primaryIdentifierColumnNames, @Nonnull Set<String> nonNullColumns)
+	public NullableColumnsValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames, @Nonnull Set<String> nonNullColumns)
 	{
 		this.connectionProvider = connectionProvider;
-		this.tableName = tableName;
+		this.whitelistEntry = whitelistEntry;
 		this.primaryIdentifierColumnNames = primaryIdentifierColumnNames;
 		this.nonNullColumns = nonNullColumns;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
 	{
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
 		{
 			final List<String> primaryIdentifierColumnNames = connectionProvider.getQueries().getPrimaryKeyColumnNames(whiteListEntry.getKey());
 			final Set<String> nonNullColumns = connectionProvider.getQueries().getAllNonnullColumns(whiteListEntry.getKey());
 
-			testData.add(new Object[] { connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames, nonNullColumns });
+			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames, nonNullColumns });
 		}
 
 		return testData;
@@ -64,7 +65,7 @@ public class NullableColumnsValidator
 
 		if (!invalidNonnullColumnNames.isEmpty())
 		{
-			throw new ValidationException("The following columns for table " + tableName + " have a not null constraint which prevents remove revisions: " + invalidNonnullColumnNames);
+			throw new ValidationException("The following columns for table " + whitelistEntry.getAuditTableName() + " have a not null constraint which prevents remove revisions: " + invalidNonnullColumnNames);
 		}
 	}
 }

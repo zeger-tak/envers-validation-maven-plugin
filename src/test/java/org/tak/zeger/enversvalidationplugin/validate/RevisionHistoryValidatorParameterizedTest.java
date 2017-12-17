@@ -24,6 +24,7 @@ import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstanc
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @RunWith(Parameterized.class)
@@ -39,7 +40,7 @@ public class RevisionHistoryValidatorParameterizedTest
 	public RevisionHistoryValidatorParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
-		validator = new RevisionHistoryValidator(connectionProvider, "auditTableName", recordsInAuditTable, recordsInAuditedTable);
+		validator = new RevisionHistoryValidator(connectionProvider, new WhitelistEntry("auditTableName", null, "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
 		this.expectedExceptionMessageValidFlow = expectedExceptionMessageValidFlow;
 		this.expectedExceptionMessageAddOrModifyContent = expectedExceptionMessageAddOrModifyContent;
 	}
@@ -57,9 +58,9 @@ public class RevisionHistoryValidatorParameterizedTest
 	{
 		final String id1 = "primaryId1";
 		final String id2 = "primaryId2";
-		final String expectedExceptionMessageValidFlowId1 = "The following identifiers [" + id1 + "] have an invalid audit history for the table auditTableName";
-		final String expectedExceptionMessageValidFlowId2 = "The following identifiers [" + id2 + "] have an invalid audit history for the table auditTableName";
-		final String expectedExceptionMessageValidFlowId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have an invalid audit history for the table auditTableName";
+		final String expectedExceptionMessageValidFlowId1 = "The following identifiers [" + id1 + "] have an invalid audit history in auditTableName for the table auditTableName";
+		final String expectedExceptionMessageValidFlowId2 = "The following identifiers [" + id2 + "] have an invalid audit history in auditTableName for the table auditTableName";
+		final String expectedExceptionMessageValidFlowId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have an invalid audit history in auditTableName for the table auditTableName";
 
 		final String expectedExceptionMessageAddModifyId1 = "The following identifiers [" + id1 + "] have a latest revision of type Add/Modify but have no record present in content table auditTableName.";
 		final String expectedExceptionMessageAddModifyId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have a latest revision of type Add/Modify but have no record present in content table auditTableName.";

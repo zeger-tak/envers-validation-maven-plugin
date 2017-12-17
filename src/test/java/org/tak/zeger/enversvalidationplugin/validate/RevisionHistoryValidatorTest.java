@@ -21,6 +21,7 @@ import org.mockito.junit.MockitoRule;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 
 public class RevisionHistoryValidatorTest
 {
@@ -30,7 +31,7 @@ public class RevisionHistoryValidatorTest
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@Mock
-	private Map<String, String> whiteList;
+	private Map<String, WhitelistEntry> whiteList;
 
 	@Mock
 	private ConnectionProviderInstance connectionProvider;
@@ -66,7 +67,7 @@ public class RevisionHistoryValidatorTest
 
 		final Map<String, List<TableRow>> auditTableRecords = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
 
-		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, auditedTable)));
+		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new WhitelistEntry(AUDIT_TABLE, null, auditedTable))));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(primaryIdentifierColumnNames);
 		when(databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, AUDIT_TABLE, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
 
@@ -76,7 +77,7 @@ public class RevisionHistoryValidatorTest
 		// Then
 		assertEquals(1, testData.size());
 		assertEquals(connectionProvider, testData.get(0)[0]);
-		assertEquals(auditedTable, testData.get(0)[1]);
+		assertEquals(auditedTable, ((WhitelistEntry) testData.get(0)[1]).getContentTableName());
 		assertEquals(auditTableRecords, testData.get(0)[2]);
 	}
 
@@ -86,7 +87,7 @@ public class RevisionHistoryValidatorTest
 		// Given
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
-		final RevisionHistoryValidator validator = spy(new RevisionHistoryValidator(connectionProvider, AUDIT_TABLE, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionHistoryValidator validator = spy(new RevisionHistoryValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE, null, AUDIT_TABLE), recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		validator.validateHistoryIsAValidFlow();

@@ -24,6 +24,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 public class AuditTableWhiteListValidatorTest
@@ -35,7 +36,7 @@ public class AuditTableWhiteListValidatorTest
 	private AuditTableWhiteListValidator validator;
 
 	@Mock
-	private Map<String, String> whiteList;
+	private Map<String, WhitelistEntry> whiteList;
 
 	@Mock
 	private Set<String> auditTablesInDatabase;
@@ -168,7 +169,7 @@ public class AuditTableWhiteListValidatorTest
 		// Given
 		final String auditedTable = "auditedTable";
 
-		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditedTable, auditedTable)));
+		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditedTable, new WhitelistEntry(auditedTable, null, auditedTable))));
 		final CachedResultSetTable queryResult = mock(CachedResultSetTable.class);
 		when(whiteList.entrySet()).thenReturn(Collections.emptySet());
 		when(databaseQueries.getTableByName(auditedTable)).thenReturn(queryResult);
@@ -184,9 +185,9 @@ public class AuditTableWhiteListValidatorTest
 		// Given
 		final String auditedTable = "auditedTable";
 		final String notAuditedTable = "unaudited";
-		final Set<Map.Entry<String, String>> entrySet = new HashSet<>();
-		entrySet.add(new HashMap.SimpleEntry<>(auditedTable, auditedTable));
-		entrySet.add(new HashMap.SimpleEntry<>(notAuditedTable, notAuditedTable));
+		final Set<Map.Entry<String, WhitelistEntry>> entrySet = new HashSet<>();
+		entrySet.add(new HashMap.SimpleEntry<>(auditedTable, new WhitelistEntry(auditedTable, null, auditedTable)));
+		entrySet.add(new HashMap.SimpleEntry<>(notAuditedTable, new WhitelistEntry(notAuditedTable, null, notAuditedTable)));
 
 		when(whiteList.entrySet()).thenReturn(entrySet);
 

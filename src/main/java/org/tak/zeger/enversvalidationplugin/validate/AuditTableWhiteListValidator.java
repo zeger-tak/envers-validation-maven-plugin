@@ -15,6 +15,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -24,7 +25,7 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class AuditTableWhiteListValidator
 {
 	@WhiteList
-	private Map<String, String> whiteList;
+	private Map<String, WhitelistEntry> whiteList;
 
 	@ListOfAuditTablesInDatabase
 	private Set<String> auditTablesInDatabase;
@@ -74,10 +75,10 @@ public class AuditTableWhiteListValidator
 	public void validateAllWhiteListedAuditTablesAuditAnExistingTable() throws SQLException, DataSetException
 	{
 		final Set<String> auditTablesWithoutATableToAudit = new HashSet<>(whiteList.size());
-		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
 		{
-			final String auditedTableName = whiteListEntry.getValue();
-			final CachedResultSetTable auditTable = connectionProvider.getQueries().getTableByName(auditedTableName);
+			final WhitelistEntry whitelistEntry = whiteListEntry.getValue();
+			final CachedResultSetTable auditTable = connectionProvider.getQueries().getTableByName(whitelistEntry.getAuditTableName());
 			if (auditTable.getRowCount() != 1)
 			{
 				final String auditTableName = whiteListEntry.getKey();

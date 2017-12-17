@@ -12,6 +12,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -21,7 +22,7 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class ForeignKeyConstraintValidator
 {
 	@WhiteList
-	private Map<String, String> whiteList;
+	private Map<String, WhitelistEntry> whiteList;
 
 	@ConnectionProvider
 	private ConnectionProviderInstance connectionProvider;

@@ -22,6 +22,7 @@ import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstanc
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -31,28 +32,28 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class RevisionValidator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final String auditedTableName;
+	private final WhitelistEntry whitelistEntry;
 	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
 
-	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditedTableName, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK, @Nonnull Map<String, List<TableRow>> recordsInAuditTable)
+	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK, @Nonnull Map<String, List<TableRow>> recordsInAuditTable)
 	{
 		this.connectionProvider = connectionProvider;
-		this.auditedTableName = auditedTableName;
+		this.whitelistEntry = whitelistEntry;
 		this.recordsInAuditedTableIdentifiedByPK = recordsInAuditedTableIdentifiedByPK;
 		this.recordsInAuditTable = recordsInAuditTable;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
 	{
 		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
 		{
-			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue());
+			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue().getContentTableName());
 
-			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
+			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue().getContentTableName(), primaryIdentifierColumnNames);
 			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
 			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), recordsInAuditedTableById, recordsInAuditTableGroupedById });
 		}
@@ -139,8 +140,10 @@ public class RevisionValidator
 			errorMessage.append("The following identifiers ");
 			errorMessage.append(identifiersWhichShouldHaveAnAddOrModifyRevision);
 			errorMessage.append(" in table ");
-			errorMessage.append(auditedTableName);
-			errorMessage.append(" do not have an Add/Modify revision table as their last revision or do not have a revision at all.");
+			errorMessage.append(whitelistEntry.getContentTableName());
+			errorMessage.append(" do not have an Add/Modify revision in table ");
+			errorMessage.append(whitelistEntry.getAuditTableName());
+			errorMessage.append(" as their last revision or do not have a revision at all.");
 
 			if (!rowsWithDifferentValues.isEmpty())
 			{

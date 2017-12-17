@@ -19,6 +19,7 @@ import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstanc
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -28,28 +29,28 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class RevisionHistoryValidator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final String auditedTableName;
+	private final WhitelistEntry whitelistEntry;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
 	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
 
-	public RevisionHistoryValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditedTableName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
+	public RevisionHistoryValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
 	{
 		this.connectionProvider = connectionProvider;
-		this.auditedTableName = auditedTableName;
+		this.whitelistEntry = whitelistEntry;
 		this.recordsInAuditTable = recordsInAuditTable;
 		this.recordsInAuditedTableIdentifiedByPK = recordsInAuditedTableIdentifiedByPK;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, String> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
 	{
 		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, String> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
 		{
-			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue());
+			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue().getContentTableName());
 
-			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
+			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue().getContentTableName(), primaryIdentifierColumnNames);
 			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
 			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), recordsInAuditTableGroupedById, recordsInAuditedTableById });
 		}
@@ -104,7 +105,7 @@ public class RevisionHistoryValidator
 
 		if (!identifiersWithInvalidHistory.isEmpty())
 		{
-			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history for the table " + auditedTableName);
+			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history in " + whitelistEntry.getAuditTableName() + " for the table " + whitelistEntry.getContentTableName());
 		}
 	}
 
@@ -145,7 +146,7 @@ public class RevisionHistoryValidator
 
 		if (!recordsWithAnAddOrModifyLatestRevisionButNoExistingContent.isEmpty())
 		{
-			throw new ValidationException("The following identifiers " + recordsWithAnAddOrModifyLatestRevisionButNoExistingContent + " have a latest revision of type Add/Modify but have no record present in content table " + auditedTableName + ".");
+			throw new ValidationException("The following identifiers " + recordsWithAnAddOrModifyLatestRevisionButNoExistingContent + " have a latest revision of type Add/Modify but have no record present in content table " + whitelistEntry.getContentTableName() + ".");
 		}
 	}
 }
