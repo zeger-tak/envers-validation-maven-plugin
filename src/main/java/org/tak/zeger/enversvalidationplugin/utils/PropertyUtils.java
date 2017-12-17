@@ -10,10 +10,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.Nonnull;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.whitelist.ObjectFactory;
+import org.tak.zeger.enversvalidationplugin.whitelist.WhiteListEntryFile;
+import org.tak.zeger.enversvalidationplugin.whitelist.WhitelistEntryType;
 
 public final class PropertyUtils
 {
@@ -73,20 +80,30 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	public static Map<String, String> getWhiteList(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
+	public static Map<String, WhitelistEntry> getWhiteList(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
-		final Map<String, String> map = new HashMap<>();
 		final File file = new File(fileName);
-		final Properties whiteList = getPropertiesFromFile(file);
-
-		for (final String name : whiteList.stringPropertyNames())
+		try
 		{
-			final String property = whiteList.getProperty(name);
-			final String auditedTableName = StringUtils.isBlank(property) ? name.replaceAll(auditTablePostFix, "") : property;
-			map.put(name, auditedTableName);
-		}
+			final JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			final WhiteListEntryFile whiteListEntryFile = (WhiteListEntryFile) unmarshaller.unmarshal(file);
 
-		return map;
+			final Map<String, WhitelistEntry> whiteList = new HashMap<>();
+			for (WhitelistEntryType whitelistEntryType : whiteListEntryFile.getWhitelistEntry())
+			{
+				final String auditTableName = whitelistEntryType.getAuditTableName();
+				final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
+				final String contentTableName = StringUtils.isBlank(whitelistEntryType.getContentTableName()) ? auditTableName.replaceAll(auditTablePostFix, "") : whitelistEntryType.getContentTableName();
+
+				whiteList.put(auditTableName, new WhitelistEntry(auditTableName, auditTableParentName, contentTableName));
+			}
+			return whiteList;
+		}
+		catch (JAXBException | RuntimeException e)
+		{
+			throw new MojoFailureException("Unable to retrieve whitelist, errormessage: " + e.getMessage(), e);
+		}
 	}
 
 	@Nonnull

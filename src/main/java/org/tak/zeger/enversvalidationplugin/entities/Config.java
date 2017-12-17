@@ -11,10 +11,10 @@ import org.tak.zeger.enversvalidationplugin.execution.ValidatorWrapper;
 public class Config
 {
 	private final List<String> packagesToScanForValidators;
-	private final Map<String, String> whiteList;
+	private final Map<String, WhitelistEntry> whiteList;
 	private final List<String> ignorables;
 
-	public Config(@Nonnull List<String> packagesToScanForValidators, @Nonnull Map<String, String> whiteList, @Nonnull List<String> ignorables)
+	public Config(@Nonnull List<String> packagesToScanForValidators, @Nonnull Map<String, WhitelistEntry> whiteList, @Nonnull List<String> ignorables)
 	{
 		this.packagesToScanForValidators = packagesToScanForValidators;
 		this.whiteList = whiteList;
@@ -28,7 +28,7 @@ public class Config
 	}
 
 	@Nonnull
-	public Map<String, String> getWhiteList()
+	public Map<String, WhitelistEntry> getWhiteList()
 	{
 		return whiteList;
 	}

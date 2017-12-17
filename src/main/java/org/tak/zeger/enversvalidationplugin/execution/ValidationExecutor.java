@@ -19,6 +19,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.entities.Config;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 import org.tak.zeger.enversvalidationplugin.utils.ReflectionUtils;
 
@@ -79,7 +80,7 @@ public class ValidationExecutor
 		validatorMethodsIgnored.clear();
 	}
 
-	private void invokeValidationValidators(@Nonnull Log log, @Nonnull Class<?> validatorClass, @Nonnull ConnectionProviderInstance connectionProvider, @Nonnull Map<String, String> whiteList, @Nonnull Set<String> auditTablesInDatabase) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
+	private void invokeValidationValidators(@Nonnull Log log, @Nonnull Class<?> validatorClass, @Nonnull ConnectionProviderInstance connectionProvider, @Nonnull Map<String, WhitelistEntry> whiteList, @Nonnull Set<String> auditTablesInDatabase) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException
 	{
 		final ValidatorInstanceCreator validatorInstanceCreator = new ValidatorInstanceCreator(connectionProvider, whiteList, auditTablesInDatabase, validatorClass);
 		final List<ValidatorWrapper> validatorInstances = validatorInstanceCreator.getValidators();

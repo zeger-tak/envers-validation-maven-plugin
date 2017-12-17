@@ -63,7 +63,7 @@ public class ConnectionProviderInstance
 		}
 		catch (Exception e)
 		{
-			throw new DatabaseNotSupportedException(e.getMessage(), e);
+			throw new DatabaseNotSupportedException("An error occurred while trying to initialise the database connection provider, is it correctly configured? " + e.getMessage(), e);
 		}
 
 		throw new DatabaseNotSupportedException("Unable to determine database type.");

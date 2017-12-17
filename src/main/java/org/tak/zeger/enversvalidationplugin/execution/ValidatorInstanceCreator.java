@@ -18,18 +18,19 @@ import org.tak.zeger.enversvalidationplugin.annotation.ListOfAuditTablesInDataba
 import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 import org.tak.zeger.enversvalidationplugin.utils.ReflectionUtils;
 
 public class ValidatorInstanceCreator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final Map<String, String> whiteList;
+	private final Map<String, WhitelistEntry> whiteList;
 	private final Set<String> auditTablesInDatabase;
 	private final Class<?> validatorClass;
 	private final List<ValidatorWrapper> validators;
 
-	public ValidatorInstanceCreator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull Map<String, String> whiteList, @Nonnull Set<String> auditTablesInDatabase, @Nonnull Class<?> validatorClass) throws IllegalAccessException, InstantiationException, InvocationTargetException
+	public ValidatorInstanceCreator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull Map<String, WhitelistEntry> whiteList, @Nonnull Set<String> auditTablesInDatabase, @Nonnull Class<?> validatorClass) throws IllegalAccessException, InstantiationException, InvocationTargetException
 	{
 		this.connectionProvider = connectionProvider;
 		this.whiteList = whiteList;
@@ -49,12 +50,14 @@ public class ValidatorInstanceCreator
 				try
 				{
 					final List<Object> methodParameters = provideParameterizedMethodWithParameters(method);
+
+					@SuppressWarnings("unchecked")
 					final List<Object[]> generatedData = (List<Object[]>) method.invoke(null, methodParameters.toArray());
 
 					final List<ValidatorWrapper> validatorInstances = new ArrayList<>(generatedData.size());
 					for (int index = 0; index < generatedData.size(); index++)
 					{
-						Object[] constructorParameters = generatedData.get(index);
+						final Object[] constructorParameters = generatedData.get(index);
 						validatorInstances.add(new ParameterizedValidatorWrapper(createValidatorInstance(constructorParameters), constructorParameters, index));
 					}
 					return validatorInstances;
