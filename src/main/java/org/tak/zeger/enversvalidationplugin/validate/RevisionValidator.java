@@ -73,7 +73,6 @@ public class RevisionValidator
 	 * - An Add revision following after either an Add or an Modify revision.
 	 * - Only a Remove revision, or a Remove revision following after another Remove revision.
 	 * - An Modify revision following after a Remove revision.
-	 * - Each Remove revision has all its non-primary key columns set to NULL.
 	 */
 	@Validate
 	public void validateHistoryIsAValidFlow()
@@ -101,12 +100,6 @@ public class RevisionValidator
 				{
 					identifiersWithInvalidHistory.add(auditHistoryPerIdentifier.getKey());
 					break;
-				}
-
-				// TODO: Validate each revision has a revision in parent table if a parent table is specified.
-				if (revType == RevisionConstants.REMOVE_REVISION)
-				{
-					// TODO: Validate only primary key columns are nonnull.
 				}
 
 				existingRecord = !(existingRecord && revType == RevisionConstants.REMOVE_REVISION);
@@ -205,6 +198,9 @@ public class RevisionValidator
 		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
+	/**
+	 * TODO: Include parent table column values if parent table is specified.
+	 */
 	@Nonnull
 	Map<String, TableRow> determineIncorrectColumns(@Nonnull TableRow actualRecord, @Nonnull TableRow lastRevision)
 	{
