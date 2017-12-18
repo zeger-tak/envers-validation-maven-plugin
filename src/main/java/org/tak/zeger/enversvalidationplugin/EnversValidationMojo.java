@@ -3,12 +3,8 @@ package org.tak.zeger.enversvalidationplugin;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nonnull;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -16,9 +12,10 @@ import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
-import org.tak.zeger.enversvalidationplugin.entities.Config;
+import org.tak.zeger.enversvalidationplugin.entities.ValidationResults;
 import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
-import org.tak.zeger.enversvalidationplugin.execution.ValidationExecutor;
+import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
+import org.tak.zeger.enversvalidationplugin.execution.SetupExecutor;
 import org.tak.zeger.enversvalidationplugin.utils.PropertyUtils;
 
 @Mojo(name = "validate")
@@ -60,34 +57,33 @@ public class EnversValidationMojo extends AbstractMojo
 	private List<String> ignorables;
 
 	@Override
-	public void execute() throws MojoExecutionException, MojoFailureException
+	public void execute() throws MojoFailureException
 	{
 		final ConnectionProviderInstance connectionProvider = PropertyUtils.getConnectionProperties(connectionPropertyFile);
 		final Map<String, WhitelistEntry> whiteList = PropertyUtils.getWhiteList(connectionProvider.getWhiteListPropertyFile(), connectionProvider.getQueries().getAuditTablePostFix());
-		final Set<String> listOfAuditTablesInDatabase = getListOfAuditTablesInDatabase(connectionProvider);
-		final Config config = new Config(packageToScanForValidators, whiteList, ignorables);
-		try
-		{
-			packageToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
-			final ValidationExecutor validationExecutor = new ValidationExecutor(getLog(), config, connectionProvider);
-			validationExecutor.executeValidations(getLog(), listOfAuditTablesInDatabase);
-		}
-		catch (Exception e)
-		{
-			throw new MojoFailureException(e.getMessage(), e);
-		}
-	}
 
-	@Nonnull
-	private Set<String> getListOfAuditTablesInDatabase(@Nonnull ConnectionProviderInstance connectionProvider)
-	{
+		final ValidationResults validationResults = new ValidationResults();
+		packageToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
 		try
 		{
-			return connectionProvider.getQueries().getTablesByNameEndingWith(connectionProvider.getQueries().getAuditTablePostFix());
+			new SetupExecutor(getLog(), ignorables, connectionProvider).execute(packageToScanForValidators, whiteList, validationResults);
 		}
-		catch (Exception e)
+		catch (RuntimeException e)
 		{
-			throw new RuntimeException(e.getMessage(), e);
+			getLog().error(e);
+			throw new MojoFailureException("Exception occurred: " + e.getMessage());
+		}
+
+		final List<Class> validatorClassesIgnored = validationResults.getValidatorClassesIgnored();
+		if (!validatorClassesIgnored.isEmpty())
+		{
+			getLog().info("The following validators were ignored: " + validatorClassesIgnored);
+		}
+
+		final int executionsFailed = validationResults.getExecutionsFailed();
+		if (executionsFailed > 0)
+		{
+			throw new ValidationException(executionsFailed + " validations failed, see log above for details.");
 		}
 	}
 }

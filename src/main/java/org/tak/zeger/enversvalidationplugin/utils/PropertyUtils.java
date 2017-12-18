@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.xml.bind.JAXBContext;
@@ -88,22 +90,45 @@ public final class PropertyUtils
 			final JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			final WhiteListEntryFile whiteListEntryFile = (WhiteListEntryFile) unmarshaller.unmarshal(file);
-
-			final Map<String, WhitelistEntry> whiteList = new HashMap<>();
-			for (WhitelistEntryType whitelistEntryType : whiteListEntryFile.getWhitelistEntry())
-			{
-				final String auditTableName = whitelistEntryType.getAuditTableName();
-				final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
-				final String contentTableName = StringUtils.isBlank(whitelistEntryType.getContentTableName()) ? auditTableName.replaceAll(auditTablePostFix, "") : whitelistEntryType.getContentTableName();
-
-				whiteList.put(auditTableName, new WhitelistEntry(auditTableName, auditTableParentName, contentTableName));
-			}
-			return whiteList;
+			return createWhitelist(whiteListEntryFile, auditTablePostFix);
 		}
 		catch (JAXBException | RuntimeException e)
 		{
 			throw new MojoFailureException("Unable to retrieve whitelist, errormessage: " + e.getMessage(), e);
 		}
+	}
+
+	@Nonnull
+	private static Map<String, WhitelistEntry> createWhitelist(WhiteListEntryFile whiteListEntryFile, @Nonnull String auditTablePostFix) throws MojoFailureException
+	{
+		final Map<String, WhitelistEntryType> whitelistTypes = convertToMap(whiteListEntryFile.getWhitelistEntry());
+		final Map<String, WhitelistEntry> whiteList = new HashMap<>();
+
+		for (WhitelistEntryType whitelistEntryType : whitelistTypes.values())
+		{
+			final String auditTableName = whitelistEntryType.getAuditTableName();
+			final String contentTableName = parseContentTableName(whitelistEntryType, auditTablePostFix);
+			whiteList.putIfAbsent(auditTableName, new WhitelistEntry(auditTableName, contentTableName));
+
+			final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
+			if (StringUtils.isNotBlank(auditTableParentName))
+			{
+				final WhitelistEntryType parentWhitelistEntryType = whitelistTypes.get(auditTableParentName);
+				if (parentWhitelistEntryType == null)
+				{
+					throw new MojoFailureException("Unable to construct the whitelist tree as " + whitelistEntryType + " has a parent audit table for which no " + WhitelistEntryType.class.getSimpleName() + " was configured.");
+				}
+
+				whiteList.putIfAbsent(parentWhitelistEntryType.getAuditTableName(), new WhitelistEntry(parentWhitelistEntryType.getAuditTableName(), parseContentTableName(parentWhitelistEntryType, auditTablePostFix)));
+			}
+		}
+		return whiteList;
+	}
+
+	@Nonnull
+	private static String parseContentTableName(@Nonnull WhitelistEntryType whitelistEntryType, @Nonnull String auditTablePostFix)
+	{
+		return StringUtils.isBlank(whitelistEntryType.getContentTableName()) ? whitelistEntryType.getAuditTableName().replaceAll(auditTablePostFix, "") : whitelistEntryType.getContentTableName();
 	}
 
 	@Nonnull
@@ -120,5 +145,11 @@ public final class PropertyUtils
 			throw new MojoFailureException(e.getMessage(), e);
 		}
 		return connectionPropertiesInFile;
+	}
+
+	@Nonnull
+	private static Map<String, WhitelistEntryType> convertToMap(@Nonnull List<WhitelistEntryType> list)
+	{
+		return list.stream().collect(Collectors.toMap(WhitelistEntryType::getAuditTableName, Function.identity()));
 	}
 }

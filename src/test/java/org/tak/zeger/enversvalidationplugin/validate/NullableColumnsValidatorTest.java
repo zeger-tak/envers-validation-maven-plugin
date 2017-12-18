@@ -63,7 +63,7 @@ public class NullableColumnsValidatorTest
 		// Given
 		final String auditTable = "auditTable";
 		final String auditedTable = "auditedTable";
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(auditTable, null, auditedTable);
+		final WhitelistEntry whitelistEntry = new WhitelistEntry(auditTable, auditedTable);
 
 		final List<String> pkColumnNamesAuditedTable = Collections.singletonList(auditTable);
 		final Set<String> nonNullColumns = Collections.singleton(auditTable);
@@ -90,7 +90,7 @@ public class NullableColumnsValidatorTest
 		final String tableName = "tableName";
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final Set<String> nonNullColumnNames = Collections.singleton(tableName);
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, null, tableName);
+		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, tableName);
 
 		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, whitelistEntry, pkColumnNames, nonNullColumnNames);
 
@@ -103,13 +103,12 @@ public class NullableColumnsValidatorTest
 	{
 		// Given
 		final String tableName = "tableName";
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, null, tableName);
+		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, tableName);
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final String unexpectedNonNullColumnName = "unexpectedNonNullColumnName";
 		final Set<String> nonNullColumnNames = new HashSet<>();
 		nonNullColumnNames.add(tableName);
 		nonNullColumnNames.add(unexpectedNonNullColumnName);
-
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn("rev");
 
@@ -132,7 +131,7 @@ public class NullableColumnsValidatorTest
 	{
 		// Given
 		final String tableName = "tableName";
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, null, tableName);
+		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, tableName);
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final String unexpectedNonNullColumnName1 = "unexpectedNonNullColumnName1";
 		final String unexpectedNonNullColumnName2 = "unexpectedNonNullColumnName2";

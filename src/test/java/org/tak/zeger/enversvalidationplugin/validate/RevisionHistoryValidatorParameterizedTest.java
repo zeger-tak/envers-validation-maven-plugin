@@ -40,7 +40,7 @@ public class RevisionHistoryValidatorParameterizedTest
 	public RevisionHistoryValidatorParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
-		validator = new RevisionHistoryValidator(connectionProvider, new WhitelistEntry("auditTableName", null, "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
+		validator = new RevisionHistoryValidator(connectionProvider, new WhitelistEntry("auditTableName", "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
 		this.expectedExceptionMessageValidFlow = expectedExceptionMessageValidFlow;
 		this.expectedExceptionMessageAddOrModifyContent = expectedExceptionMessageAddOrModifyContent;
 	}
@@ -64,7 +64,7 @@ public class RevisionHistoryValidatorParameterizedTest
 
 		final String expectedExceptionMessageAddModifyId1 = "The following identifiers [" + id1 + "] have a latest revision of type Add/Modify but have no record present in content table auditTableName.";
 		final String expectedExceptionMessageAddModifyId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have a latest revision of type Add/Modify but have no record present in content table auditTableName.";
-		
+
 		final TableRow addRevision = createAddRevision();
 		final TableRow modifyRevision = createModifyRevision();
 		final TableRow removeRevision = createRemoveRevision();

@@ -3,6 +3,7 @@ package org.tak.zeger.enversvalidationplugin.execution;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.text.MessageFormat;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
@@ -10,24 +11,28 @@ import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 
 public class ParameterizedValidatorWrapper implements ValidatorWrapper
 {
-	private final int index;
 	private final Object validator;
 	private final Object[] constructorArguments;
+	private final List<Method> validateMethods;
+	private final int index;
 
-	public ParameterizedValidatorWrapper(@Nonnull Object validator, @Nonnull Object[] constructorArguments, int index)
+	public ParameterizedValidatorWrapper(@Nonnull Object validator, @Nonnull Object[] constructorArguments, @Nonnull List<Method> validateMethods, int index)
 	{
 		this.validator = validator;
 		this.constructorArguments = constructorArguments;
+		this.validateMethods = validateMethods;
 		this.index = index;
 	}
 
 	@Nonnull
+	@Override
 	public Object getValidator()
 	{
 		return validator;
 	}
 
 	@Nonnull
+	@Override
 	public String getValidationName(@Nonnull Method method)
 	{
 		String methodBeingExecuted = determineMethodName(method);
@@ -70,5 +75,12 @@ public class ParameterizedValidatorWrapper implements ValidatorWrapper
 	private String determineMethodName(@Nonnull Method method)
 	{
 		return validator.getClass().getSimpleName() + "." + method.getName();
+	}
+
+	@Nonnull
+	@Override
+	public List<Method> getValidateMethods()
+	{
+		return validateMethods;
 	}
 }

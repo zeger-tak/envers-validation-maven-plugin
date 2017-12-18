@@ -1,15 +1,17 @@
 package org.tak.zeger.enversvalidationplugin.validate;
 
 import java.sql.SQLException;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.dbunit.database.CachedResultSetTable;
+import javax.annotation.Nonnull;
+
 import org.dbunit.dataset.DataSetException;
 import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
-import org.tak.zeger.enversvalidationplugin.annotation.ListOfAuditTablesInDatabase;
+import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
@@ -24,14 +26,20 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 @ValidationType(TargetPhase.TABLE_STRUCTURE)
 public class AuditTableWhiteListValidator
 {
-	@WhiteList
-	private Map<String, WhitelistEntry> whiteList;
+	private final Map<String, WhitelistEntry> whiteList;
+	private final Set<String> auditTablesInDatabase;
 
-	@ListOfAuditTablesInDatabase
-	private Set<String> auditTablesInDatabase;
+	public AuditTableWhiteListValidator(@Nonnull Map<String, WhitelistEntry> whiteList, @Nonnull Set<String> auditTablesInDatabase)
+	{
+		this.whiteList = whiteList;
+		this.auditTablesInDatabase = auditTablesInDatabase;
+	}
 
-	@ConnectionProvider
-	private ConnectionProviderInstance connectionProvider;
+	@Parameterized(name = "auditTablesInDatabase", uniqueIdentifier = "auditTablesInDatabase")
+	public static List<Object[]> generateData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
+	{
+		return Collections.singletonList(new Object[] { connectionProvider, whiteList, connectionProvider.getQueries().getTablesByNameEndingWith(connectionProvider.getQueries().getAuditTablePostFix()) });
+	}
 
 	/**
 	 * Validates that all audit tables present in the database are specified in the whitelist.
@@ -47,48 +55,6 @@ public class AuditTableWhiteListValidator
 		if (!auditTablesNotOnWhiteList.isEmpty())
 		{
 			throw new ValidationException("The following audit tables are not whitelisted: " + auditTablesNotOnWhiteList);
-		}
-	}
-
-	/**
-	 * Validates that all audit tables specified in the whitelist exist in the database.
-	 */
-	@Validate
-	public void validateAllWhiteListedAuditTablesExist()
-	{
-		final Set<String> whiteListedAuditTables = whiteList.keySet();
-
-		final Set<String> whiteListedAuditTablesThatDoNotExistInDatabase = new HashSet<>(whiteListedAuditTables);
-		whiteListedAuditTablesThatDoNotExistInDatabase.removeAll(auditTablesInDatabase.stream().map(String::toUpperCase).collect(Collectors.toSet()));
-
-		if (!whiteListedAuditTablesThatDoNotExistInDatabase.isEmpty())
-		{
-			throw new ValidationException("The following whitelisted tables do not exist in the database: " + whiteListedAuditTablesThatDoNotExistInDatabase);
-		}
-	}
-
-	/**
-	 * Validates that all whitelisted audit tables audit an existing content table.
-	 * I.e. if TEMP_TABLE_AUD=TEMP_TABLE is specified in the whitelist, but TEMP_TABLE does not exist in the database, this validator will fail.
-	 */
-	@Validate
-	public void validateAllWhiteListedAuditTablesAuditAnExistingTable() throws SQLException, DataSetException
-	{
-		final Set<String> auditTablesWithoutATableToAudit = new HashSet<>(whiteList.size());
-		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
-		{
-			final WhitelistEntry whitelistEntry = whiteListEntry.getValue();
-			final CachedResultSetTable auditTable = connectionProvider.getQueries().getTableByName(whitelistEntry.getAuditTableName());
-			if (auditTable.getRowCount() != 1)
-			{
-				final String auditTableName = whiteListEntry.getKey();
-				auditTablesWithoutATableToAudit.add(auditTableName);
-			}
-		}
-
-		if (!auditTablesWithoutATableToAudit.isEmpty())
-		{
-			throw new ValidationException("The following audit tables do not audit another table in the database, or do not have the correct mapping to the audited table: " + auditTablesWithoutATableToAudit);
 		}
 	}
 }

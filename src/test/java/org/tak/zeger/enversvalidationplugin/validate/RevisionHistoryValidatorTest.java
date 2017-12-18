@@ -67,7 +67,7 @@ public class RevisionHistoryValidatorTest
 
 		final Map<String, List<TableRow>> auditTableRecords = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
 
-		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new WhitelistEntry(AUDIT_TABLE, null, auditedTable))));
+		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new WhitelistEntry(AUDIT_TABLE, auditedTable))));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(primaryIdentifierColumnNames);
 		when(databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, AUDIT_TABLE, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
 
@@ -87,7 +87,7 @@ public class RevisionHistoryValidatorTest
 		// Given
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
-		final RevisionHistoryValidator validator = spy(new RevisionHistoryValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE, null, AUDIT_TABLE), recordsInAuditTable, recordsInAuditedTable));
+		final RevisionHistoryValidator validator = spy(new RevisionHistoryValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE), recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		validator.validateHistoryIsAValidFlow();

@@ -9,13 +9,13 @@ import javax.annotation.Nullable;
 public class WhitelistEntry
 {
 	private final String auditTableName;
-	private final String auditTableParentName;
 	private final String contentTableName;
 
-	public WhitelistEntry(@Nonnull String auditTableName, @Nullable String auditTableParentName, @Nonnull String contentTableName)
+	private WhitelistEntry auditTableParent;
+
+	public WhitelistEntry(@Nonnull String auditTableName, @Nonnull String contentTableName)
 	{
 		this.auditTableName = auditTableName;
-		this.auditTableParentName = auditTableParentName;
 		this.contentTableName = contentTableName;
 	}
 
@@ -26,9 +26,14 @@ public class WhitelistEntry
 	}
 
 	@CheckForNull
-	public String getAuditTableParentName()
+	public WhitelistEntry getAuditTableParent()
 	{
-		return auditTableParentName;
+		return auditTableParent;
+	}
+
+	public void setAuditTableParent(@Nullable WhitelistEntry auditTableParent)
+	{
+		this.auditTableParent = auditTableParent;
 	}
 
 	@Nonnull
@@ -61,6 +66,6 @@ public class WhitelistEntry
 	@Override
 	public String toString()
 	{
-		return "WhitelistEntry[auditTableName='" + auditTableName + "', auditTableParentName='" + auditTableParentName + "', contentTableName='" + contentTableName + "']";
+		return "WhitelistEntry[auditTableName='" + auditTableName + (auditTableParent == null ? "" : "', auditTableParent='" + auditTableParent) + "', contentTableName='" + contentTableName + "']";
 	}
 }
