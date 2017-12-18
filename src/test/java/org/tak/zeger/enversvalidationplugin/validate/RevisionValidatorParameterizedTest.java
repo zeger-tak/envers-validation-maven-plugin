@@ -28,19 +28,19 @@ import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @RunWith(Parameterized.class)
-public class RevisionHistoryValidatorParameterizedTest
+public class RevisionValidatorParameterizedTest
 {
 	private static final String REV_COLUMN = "rev";
 
-	private final RevisionHistoryValidator validator;
+	private final RevisionValidator validator;
 	private final ConnectionProviderInstance connectionProvider;
 	private final String expectedExceptionMessageValidFlow;
 	private final String expectedExceptionMessageAddOrModifyContent;
 
-	public RevisionHistoryValidatorParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
+	public RevisionValidatorParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
-		validator = new RevisionHistoryValidator(connectionProvider, new WhitelistEntry("auditTableName", "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
+		validator = new RevisionValidator(connectionProvider, new WhitelistEntry("auditTableName", "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
 		this.expectedExceptionMessageValidFlow = expectedExceptionMessageValidFlow;
 		this.expectedExceptionMessageAddOrModifyContent = expectedExceptionMessageAddOrModifyContent;
 	}

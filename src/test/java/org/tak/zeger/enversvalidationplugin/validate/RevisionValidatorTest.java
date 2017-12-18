@@ -93,8 +93,8 @@ public class RevisionValidatorTest
 		assertEquals(1, testData.size());
 		assertEquals(connectionProvider, testData.get(0)[0]);
 		assertEquals(auditedTable, ((WhitelistEntry) testData.get(0)[1]).getContentTableName());
-		assertEquals(auditedTableRecords, testData.get(0)[2]);
-		assertEquals(auditTableRecords, testData.get(0)[3]);
+		assertEquals(auditTableRecords, testData.get(0)[2]);
+		assertEquals(auditedTableRecords, testData.get(0)[3]);
 	}
 
 	@Test
@@ -105,7 +105,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable);
+		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable);
 
 		// When
 		validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
@@ -119,7 +119,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable);
+		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable);
 
 		try
 		{
@@ -146,7 +146,7 @@ public class RevisionValidatorTest
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(null);
 
-		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable);
+		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable);
 
 		// When
 		validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
@@ -165,7 +165,7 @@ public class RevisionValidatorTest
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(BigDecimal.valueOf(RevisionConstants.REMOVE_REVISION));
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		try
 		{
@@ -191,7 +191,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(auditTableRow));
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(BigDecimal.valueOf(RevisionConstants.ADD_REVISION));
@@ -214,7 +214,7 @@ public class RevisionValidatorTest
 
 		final Map<String, TableRow> incorrectColumns = mock(Map.class);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(BigDecimal.valueOf(RevisionConstants.ADD_REVISION));
@@ -247,7 +247,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -269,7 +269,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -299,7 +299,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -329,7 +329,7 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditedTable, recordsInAuditTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -451,5 +451,17 @@ public class RevisionValidatorTest
 						"\tActual value for column column: actualValue, audited value: auditValue.\n", e.getMessage());
 			//@formatter:on
 		}
+	}
+
+	@Test
+	public void testValidateHistoryIsAValidFlowWithEmptyAuditTable()
+	{
+		// Given
+		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
+		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE, AUDIT_TABLE), recordsInAuditTable, recordsInAuditedTable));
+
+		// When
+		validator.validateHistoryIsAValidFlow();
 	}
 }
