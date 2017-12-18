@@ -182,7 +182,7 @@
 						<goals>
 							<goal>generate</goal>
 						</goals>
-						<phase>compile</phase>
+						<phase>generate-sources</phase>
 					</execution>
 				</executions>
 				<configuration>
