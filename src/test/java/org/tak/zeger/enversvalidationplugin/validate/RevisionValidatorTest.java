@@ -76,6 +76,7 @@ public class RevisionValidatorTest
 	{
 		// Given
 		final String auditedTable = "";
+		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE, auditedTable);
 		final List<String> primaryIdentifierColumnNames = Collections.singletonList(AUDIT_TABLE);
 
 		final Map<String, List<TableRow>> auditTableRecords = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
@@ -83,8 +84,8 @@ public class RevisionValidatorTest
 
 		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new WhitelistEntry(AUDIT_TABLE, auditedTable))));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(primaryIdentifierColumnNames);
-		when(databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, auditedTable, primaryIdentifierColumnNames)).thenReturn(auditedTableRecords);
-		when(databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, AUDIT_TABLE, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
+		when(databaseQueries.getContentRecords(connectionProvider, whitelistEntry, primaryIdentifierColumnNames)).thenReturn(auditedTableRecords);
+		when(databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(connectionProvider, whitelistEntry, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
 
 		// When
 		final List<Object[]> testData = RevisionValidator.generateTestData(connectionProvider, whiteList);

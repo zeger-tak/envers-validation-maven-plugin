@@ -53,9 +53,9 @@ public class RevisionValidator
 		{
 			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue().getContentTableName());
 
-			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getRecordInTableIdentifiedByPK(connectionProvider, whiteListEntry.getValue().getContentTableName(), primaryIdentifierColumnNames);
-			final Map<String, List<TableRow>> recordsInAuditTableGroupedById = databaseQueries.getRecordsInTableGroupedByPK(connectionProvider, whiteListEntry.getKey(), primaryIdentifierColumnNames);
-			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), recordsInAuditTableGroupedById, recordsInAuditedTableById });
+			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getContentRecords(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
+			final Map<String, List<TableRow>> auditRecordsGroupedByContentPrimaryKey = databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(connectionProvider, whiteListEntry.getValue(), primaryIdentifierColumnNames);
+			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), auditRecordsGroupedByContentPrimaryKey, recordsInAuditedTableById });
 		}
 
 		return testData;

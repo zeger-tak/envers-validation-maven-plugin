@@ -14,6 +14,7 @@ import org.dbunit.dataset.Column;
 import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITableMetaData;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
+import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 
 public abstract class AbstractQueries implements DatabaseQueries
 {
@@ -52,9 +53,9 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public Map<String, TableRow> getRecordInTableIdentifiedByPK(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String tableName, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	public Map<String, TableRow> getContentRecords(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(connectionProvider, tableName);
+		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(connectionProvider, whitelistEntry.getContentTableName());
 		final List<String> columnNames = getColumnNames(recordsInAuditedTable);
 
 		final Map<String, TableRow> recordsInTableById = new HashMap<>();
@@ -97,9 +98,9 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public Map<String, List<TableRow>> getRecordsInTableGroupedByPK(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String tableName, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	public Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(connectionProvider, tableName);
+		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(connectionProvider, whitelistEntry.getAuditTableName());
 		final List<String> columnNames = getColumnNames(recordsInTable);
 
 		final Map<String, List<TableRow>> recordsInTableGroupedById = new HashMap<>();
