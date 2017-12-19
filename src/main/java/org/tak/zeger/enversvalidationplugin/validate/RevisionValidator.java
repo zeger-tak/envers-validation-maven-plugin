@@ -87,7 +87,7 @@ public class RevisionValidator
 				final Object columnValue = tableRow.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 				{
-					break;
+					throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
 				}
 				final int revType = ((BigDecimal) columnValue).intValue();
 				if (!existingRecord && revType != RevisionConstants.ADD_REVISION)
@@ -132,7 +132,7 @@ public class RevisionValidator
 			final Object columnValue = latestRevision.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
-				continue;
+				throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
 			}
 			final int revType = ((BigDecimal) columnValue).intValue();
 			if (revType == RevisionConstants.REMOVE_REVISION)
@@ -179,7 +179,7 @@ public class RevisionValidator
 			final Object columnValue = lastRecord.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
-				continue;
+				throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
 			}
 			final int revType = ((BigDecimal) columnValue).intValue();
 			if (revType == RevisionConstants.REMOVE_REVISION)
@@ -198,9 +198,6 @@ public class RevisionValidator
 		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
-	/**
-	 * TODO: Include parent table column values if parent table is specified.
-	 */
 	@Nonnull
 	Map<String, TableRow> determineIncorrectColumns(@Nonnull TableRow actualRecord, @Nonnull TableRow lastRevision)
 	{

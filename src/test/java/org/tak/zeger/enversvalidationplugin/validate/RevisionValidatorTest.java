@@ -154,8 +154,16 @@ public class RevisionValidatorTest
 
 		final RevisionValidator validator = new RevisionValidator(connectionProvider, whitelistEntry, recordsInAuditTable, recordsInAuditedTable);
 
-		// When
-		validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+		try
+		{
+			// When
+			validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+			fail("Expected a " + ValidationException.class.getSimpleName());
+		}
+		catch (ValidationException e)
+		{
+			assertEquals("The audit table auditTable does not have a column referring to the revision table.", e.getMessage());
+		}
 	}
 
 	@Test

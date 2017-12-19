@@ -65,6 +65,8 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 		final String expectedExceptionMessageAddModifyId1 = "The following identifiers [" + id1 + "] have a latest revision of type Add/Modify but have no record present in content table auditTableName.";
 		final String expectedExceptionMessageAddModifyId1And2 = "The following identifiers [" + id1 + ", " + id2 + "] have a latest revision of type Add/Modify but have no record present in content table auditTableName.";
 
+		final String expectedExceptionMessageForTableWithoutRevtypeColumn = "The audit table auditTableName does not have a column referring to the revision table.";
+
 		final TableRow addRevision = createAddRevision();
 		final TableRow modifyRevision = createModifyRevision();
 		final TableRow removeRevision = createRemoveRevision();
@@ -99,7 +101,7 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 				{"onlyAdd",				            Collections.singletonMap(id1, Collections.singletonList(addRevision)), 				          Collections.emptyMap(),  null, expectedExceptionMessageAddModifyId1},
 				{"onlyModify",			            Collections.singletonMap(id1, Collections.singletonList(modifyRevision)), 			          Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"onlyRemove",			            Collections.singletonMap(id1, Collections.singletonList(removeRevision)), 			          Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
-				{"onlyDoNotValidate",	            Collections.singletonMap(id1, Collections.singletonList(doNotValidateRevision)),	          Collections.emptyMap(),  null, null},
+				{"onlyDoNotValidate",	            Collections.singletonMap(id1, Collections.singletonList(doNotValidateRevision)),	          Collections.emptyMap(),  expectedExceptionMessageForTableWithoutRevtypeColumn, expectedExceptionMessageForTableWithoutRevtypeColumn},
 				// "Do not validate" revisions will not be included in the testcases below, as databaseQueries.getRevTypeColumnName is expected to be nonnull
 				
 				// Two rows for one identifier 
