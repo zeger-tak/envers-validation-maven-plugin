@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.dbunit.database.CachedResultSetTable;
+import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.Column;
 import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITableMetaData;
@@ -53,9 +54,9 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public Map<String, TableRow> getContentRecords(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	public Map<String, TableRow> getContentRecords(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(connectionProvider, whitelistEntry);
+		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(databaseConnection, whitelistEntry);
 		final List<String> columnNames = getColumnNames(recordsInAuditedTable);
 
 		final Map<String, TableRow> recordsInTableById = new HashMap<>();
@@ -75,10 +76,10 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry) throws SQLException, DataSetException
 	{
 		final String query = "select * from " + whitelistEntry.getContentTableName();
-		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(whitelistEntry.getContentTableName(), query);
+		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelistEntry.getContentTableName(), query);
 	}
 
 	@Nonnull
@@ -98,9 +99,9 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	public Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(connectionProvider, whitelistEntry, primaryIdentifierColumnNames);
+		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(databaseConnection, whitelistEntry, primaryIdentifierColumnNames);
 		final List<String> columnNames = getColumnNames(recordsInTable);
 
 		final Map<String, List<TableRow>> recordsInTableGroupedById = new HashMap<>();
@@ -123,10 +124,10 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelist, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelist, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
 		final String query = createAuditTableSelectQuery(whitelist, primaryIdentifierColumnNames);
-		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(whitelist.getAuditTableName(), query);
+		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelist.getAuditTableName(), query);
 	}
 
 	@Nonnull

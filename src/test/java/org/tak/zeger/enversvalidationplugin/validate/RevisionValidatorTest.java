@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,12 +51,16 @@ public class RevisionValidatorTest
 	private ConnectionProviderInstance connectionProvider;
 
 	@Mock
+	private IDatabaseConnection databaseConnection;
+
+	@Mock
 	private DatabaseQueries databaseQueries;
 
 	@Before
 	public void init()
 	{
 		when(connectionProvider.getQueries()).thenReturn(databaseQueries);
+		when(connectionProvider.getDatabaseConnection()).thenReturn(databaseConnection);
 	}
 
 	@Test
@@ -84,8 +89,8 @@ public class RevisionValidatorTest
 
 		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new WhitelistEntry(AUDIT_TABLE, auditedTable))));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(primaryIdentifierColumnNames);
-		when(databaseQueries.getContentRecords(connectionProvider, whitelistEntry, primaryIdentifierColumnNames)).thenReturn(auditedTableRecords);
-		when(databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(connectionProvider, whitelistEntry, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
+		when(databaseQueries.getContentRecords(databaseConnection, whitelistEntry, primaryIdentifierColumnNames)).thenReturn(auditedTableRecords);
+		when(databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(databaseConnection, whitelistEntry, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
 
 		// When
 		final List<Object[]> testData = RevisionValidator.generateTestData(connectionProvider, whiteList);

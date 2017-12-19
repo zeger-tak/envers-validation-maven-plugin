@@ -70,7 +70,7 @@ public class ConnectionProviderInstance
 	}
 
 	@Nonnull
-	IDatabaseConnection getDatabaseConnection()
+	public IDatabaseConnection getDatabaseConnection()
 	{
 		if (databaseConnection == null)
 		{

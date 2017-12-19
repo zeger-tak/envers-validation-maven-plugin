@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.dbunit.database.CachedResultSetTable;
+import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.DataSetException;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
@@ -36,10 +37,10 @@ public interface DatabaseQueries
 	List<String> getPrimaryKeyColumnNames(@Nonnull String tableName) throws SQLException, DataSetException;
 
 	@Nonnull
-	Map<String, TableRow> getContentRecords(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException;
+	Map<String, TableRow> getContentRecords(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException;
 
 	@Nonnull
-	Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException;
+	Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException;
 
 	@Nonnull
 	Set<String> getListOfTablesWithForeignKeysToRevisionTable() throws SQLException, DataSetException;
