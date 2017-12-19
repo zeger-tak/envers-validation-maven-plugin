@@ -56,7 +56,7 @@ public abstract class AbstractQueries implements DatabaseQueries
 	@Override
 	public Map<String, TableRow> getContentRecords(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(databaseConnection, whitelistEntry);
+		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(databaseConnection, whitelistEntry, primaryIdentifierColumnNames);
 		final List<String> columnNames = getColumnNames(recordsInAuditedTable);
 
 		final Map<String, TableRow> recordsInTableById = new HashMap<>();
@@ -76,10 +76,59 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final String query = "select * from " + whitelistEntry.getContentTableName();
+		//		final String query = "select * from " + whitelistEntry.getContentTableName();
+		final String query = createContentTableSelectQuery(whitelistEntry, primaryIdentifierColumnNames);
 		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelistEntry.getContentTableName(), query);
+	}
+
+	@Nonnull
+	private String createContentTableSelectQuery(@Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames)
+	{
+		final StringBuilder query = new StringBuilder("select * from ");
+		query.append(whitelistEntry.getContentTableName());
+		query.append(" ");
+		query.append(whitelistEntry.getContentTableName());
+		query.append(" ");
+
+		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		if (auditTableParent != null)
+		{
+			appendQueryWithJoinsOnParentContentTables(query, auditTableParent, whitelistEntry.getContentTableName(), primaryIdentifierColumnNames);
+		}
+		return query.toString();
+	}
+
+	private void appendQueryWithJoinsOnParentContentTables(@Nonnull StringBuilder query, @Nonnull WhitelistEntry whitelistEntry, @Nonnull String childAlias, @Nonnull List<String> primaryIdentifierColumnNames)
+	{
+		query.append("inner join ");
+		query.append(whitelistEntry.getContentTableName());
+		query.append(" ");
+		query.append(whitelistEntry.getContentTableName());
+		query.append(" on ");
+		for (int i = 0; i < primaryIdentifierColumnNames.size(); i++)
+		{
+			final String primaryIdentifierColumnName = primaryIdentifierColumnNames.get(i);
+			if (i > 0)
+			{
+				query.append(" and ");
+			}
+
+			query.append(whitelistEntry.getContentTableName());
+			query.append(".");
+			query.append(primaryIdentifierColumnName);
+			query.append(" = ");
+			query.append(childAlias);
+			query.append(".");
+			query.append(primaryIdentifierColumnName);
+			query.append(" ");
+		}
+		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		if (auditTableParent != null)
+		{
+			appendQueryWithJoinsOnParentContentTables(query, auditTableParent, whitelistEntry.getContentTableName(), primaryIdentifierColumnNames);
+		}
 	}
 
 	@Nonnull
