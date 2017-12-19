@@ -55,7 +55,7 @@ public abstract class AbstractQueries implements DatabaseQueries
 	@Override
 	public Map<String, TableRow> getContentRecords(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(connectionProvider, whitelistEntry.getContentTableName());
+		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(connectionProvider, whitelistEntry);
 		final List<String> columnNames = getColumnNames(recordsInAuditedTable);
 
 		final Map<String, TableRow> recordsInTableById = new HashMap<>();
@@ -75,10 +75,10 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String tableName) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry) throws SQLException, DataSetException
 	{
-		final String query = "select * from " + tableName;
-		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(tableName, query);
+		final String query = "select * from " + whitelistEntry.getContentTableName();
+		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(whitelistEntry.getContentTableName(), query);
 	}
 
 	@Nonnull
@@ -100,7 +100,7 @@ public abstract class AbstractQueries implements DatabaseQueries
 	@Override
 	public Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(connectionProvider, whitelistEntry.getAuditTableName());
+		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(connectionProvider, whitelistEntry, primaryIdentifierColumnNames);
 		final List<String> columnNames = getColumnNames(recordsInTable);
 
 		final Map<String, List<TableRow>> recordsInTableGroupedById = new HashMap<>();
@@ -123,10 +123,68 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String tableName) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelist, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final String query = "select * from " + tableName + " order by REV asc";
-		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(tableName, query);
+		final String query = createAuditTableSelectQuery(whitelist, primaryIdentifierColumnNames);
+		return (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable(whitelist.getAuditTableName(), query);
+	}
+
+	@Nonnull
+	private String createAuditTableSelectQuery(@Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames)
+	{
+		final String revisionTableIdentifierColumnName = getRevisionTableIdentifierColumnName();
+		final List<String> primaryIdentifierColumnsAuditTable = new ArrayList<>(primaryIdentifierColumnNames);
+		primaryIdentifierColumnsAuditTable.add(revisionTableIdentifierColumnName);
+
+		final StringBuilder query = new StringBuilder("select * from ");
+		query.append(whitelistEntry.getAuditTableName());
+		query.append(" ");
+		query.append(whitelistEntry.getAuditTableName());
+		query.append(" ");
+
+		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		if (auditTableParent != null)
+		{
+			appendQueryWithJoinsOnParentAuditTables(query, auditTableParent, whitelistEntry.getAuditTableName(), primaryIdentifierColumnsAuditTable);
+		}
+
+		query.append(" order by ");
+		query.append(whitelistEntry.getAuditTableName());
+		query.append(".");
+		query.append(revisionTableIdentifierColumnName);
+
+		return query.toString();
+	}
+
+	private void appendQueryWithJoinsOnParentAuditTables(@Nonnull StringBuilder query, @Nonnull WhitelistEntry whitelistEntry, @Nonnull String childAlias, @Nonnull List<String> primaryIdentifierColumnNames)
+	{
+		query.append("inner join ");
+		query.append(whitelistEntry.getAuditTableName());
+		query.append(" ");
+		query.append(whitelistEntry.getAuditTableName());
+		query.append(" on ");
+		for (int i = 0; i < primaryIdentifierColumnNames.size(); i++)
+		{
+			final String primaryIdentifierColumnName = primaryIdentifierColumnNames.get(i);
+			if (i > 0)
+			{
+				query.append(" and ");
+			}
+
+			query.append(whitelistEntry.getAuditTableName());
+			query.append(".");
+			query.append(primaryIdentifierColumnName);
+			query.append(" = ");
+			query.append(childAlias);
+			query.append(".");
+			query.append(primaryIdentifierColumnName);
+			query.append(" ");
+		}
+		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		if (auditTableParent != null)
+		{
+			appendQueryWithJoinsOnParentAuditTables(query, auditTableParent, whitelistEntry.getAuditTableName(), primaryIdentifierColumnNames);
+		}
 	}
 
 	@Nonnull

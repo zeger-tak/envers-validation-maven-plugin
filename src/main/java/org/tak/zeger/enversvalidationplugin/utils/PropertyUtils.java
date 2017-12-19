@@ -109,6 +109,7 @@ public final class PropertyUtils
 			final String auditTableName = whitelistEntryType.getAuditTableName();
 			final String contentTableName = parseContentTableName(whitelistEntryType, auditTablePostFix);
 			whiteList.putIfAbsent(auditTableName, new WhitelistEntry(auditTableName, contentTableName));
+			final WhitelistEntry whitelistEntry = whiteList.get(auditTableName);
 
 			final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
 			if (StringUtils.isNotBlank(auditTableParentName))
@@ -120,6 +121,8 @@ public final class PropertyUtils
 				}
 
 				whiteList.putIfAbsent(parentWhitelistEntryType.getAuditTableName(), new WhitelistEntry(parentWhitelistEntryType.getAuditTableName(), parseContentTableName(parentWhitelistEntryType, auditTablePostFix)));
+				final WhitelistEntry parentWhitelistEntry = whiteList.get(auditTableParentName);
+				whitelistEntry.setAuditTableParent(parentWhitelistEntry);
 			}
 		}
 		return whiteList;
