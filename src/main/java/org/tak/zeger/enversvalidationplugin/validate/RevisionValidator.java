@@ -198,6 +198,68 @@ public class RevisionValidator
 		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
+	// TODO: Validate Each Remove revision has all its non-primary key columns set to NULL, including parent table.
+	@Validate
+	public void validateRemoveRevisions() throws SQLException, DataSetException
+	{
+		final Map<String, List<Object>> identifiersWithNonPrimaryKeyColumnsFilled = new HashMap<>();
+		final String revTypeColumnName = connectionProvider.getQueries().getRevTypeColumnName();
+		final String revisionTableIdentifierColumnName = connectionProvider.getQueries().getRevisionTableIdentifierColumnName();
+		final Set<String> nonnullColumns = connectionProvider.getQueries().getAllNonnullColumns(whitelistEntry.getAuditTableName());
+		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
+		{
+			final List<Object> revisionsWithNullableColumnsWithNonnullValues = new ArrayList<>();
+			for (TableRow tableRow : auditHistoryPerIdentifier.getValue())
+			{
+				final Object columnValue = tableRow.getColumnValue(revTypeColumnName);
+				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
+				{
+					throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
+				}
+				final int revType = ((BigDecimal) columnValue).intValue();
+				if (revType != RevisionConstants.REMOVE_REVISION)
+				{
+					continue;
+				}
+
+				boolean hasNullableColumnsWithNonnullValues = false;
+				for (String columnName : tableRow.getColumnNames())
+				{
+					if (!nonnullColumns.contains(columnName) && tableRow.getColumnValue(columnName) != null)
+					{
+						hasNullableColumnsWithNonnullValues = true;
+						break;
+					}
+				}
+				if (hasNullableColumnsWithNonnullValues)
+				{
+					revisionsWithNullableColumnsWithNonnullValues.add(tableRow.getColumnValue(revisionTableIdentifierColumnName));
+				}
+			}
+
+			if (!revisionsWithNullableColumnsWithNonnullValues.isEmpty())
+			{
+				identifiersWithNonPrimaryKeyColumnsFilled.put(auditHistoryPerIdentifier.getKey(), revisionsWithNullableColumnsWithNonnullValues);
+			}
+		}
+
+		if (!identifiersWithNonPrimaryKeyColumnsFilled.isEmpty())
+		{
+			final StringBuilder errorMessage = new StringBuilder();
+			errorMessage.append("Identifiers found with nonnull values in nullable columns for Remove revisions: \n");
+			for (Map.Entry<String, List<Object>> identifierWithNonPrimaryKeyColumnsFilled : identifiersWithNonPrimaryKeyColumnsFilled.entrySet())
+			{
+				errorMessage.append("Identifier ");
+				errorMessage.append(identifierWithNonPrimaryKeyColumnsFilled.getKey());
+				errorMessage.append(", with the following revisions ");
+				errorMessage.append(identifierWithNonPrimaryKeyColumnsFilled.getValue());
+				errorMessage.append("\n");
+			}
+
+			throw new ValidationException(errorMessage.toString());
+		}
+	}
+
 	@Nonnull
 	Map<String, TableRow> determineIncorrectColumns(@Nonnull TableRow actualRecord, @Nonnull TableRow lastRevision)
 	{

@@ -78,7 +78,6 @@ public abstract class AbstractQueries implements DatabaseQueries
 	@Nonnull
 	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		//		final String query = "select * from " + whitelistEntry.getContentTableName();
 		final String query = createContentTableSelectQuery(whitelistEntry, primaryIdentifierColumnNames);
 		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelistEntry.getContentTableName(), query);
 	}
@@ -238,7 +237,8 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private String getPrimaryIdentifierAsString(@Nonnull CachedResultSetTable recordsInAuditedTable, int rowIndex, @Nonnull List<String> primaryIdentifierColumnNames) throws DataSetException
+	@Override
+	public String getPrimaryIdentifierAsString(@Nonnull CachedResultSetTable recordsInAuditedTable, int rowIndex, @Nonnull List<String> primaryIdentifierColumnNames) throws DataSetException
 	{
 		List<String> primaryIdentifierValue = new ArrayList<>(primaryIdentifierColumnNames.size());
 		for (String primaryIdentifierColumnName : primaryIdentifierColumnNames)
