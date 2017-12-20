@@ -56,7 +56,7 @@ public class WhitelistTablesExistValidator
 		}
 		catch (TableDoesNotExistException e)
 		{
-			throw new SetupValidationForSpecificWhitelistEntryException(whitelistEntry + " is not valid for whitelist because the following table does not exist " + e.tableName + ".", whitelistEntry);
+			throw new SetupValidationForSpecificWhitelistEntryException(whitelistEntry + " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + e.tableName + " does not exist.", whitelistEntry);
 		}
 	}
 
