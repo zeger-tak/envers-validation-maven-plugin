@@ -3,12 +3,14 @@ package org.tak.zeger.enversvalidationplugin.validate;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,6 +47,24 @@ public class AuditTableWhiteListValidatorTest
 	public void init()
 	{
 		when(connectionProvider.getQueries()).thenReturn(databaseQueries);
+	}
+
+	@Test
+	public void testGenerateData() throws SQLException, DataSetException
+	{
+		// Given
+		final String postfix = "_aud";
+		final Set<String> expectedTableNames = Collections.emptySet();
+		when(databaseQueries.getAuditTablePostFix()).thenReturn(postfix);
+		when(databaseQueries.getTablesByNameEndingWith(postfix)).thenReturn(expectedTableNames);
+
+		// When
+		final List<Object[]> generateData = AuditTableWhiteListValidator.generateData(connectionProvider, whiteList);
+
+		// Then
+		assertEquals(1, generateData.size());
+		assertEquals(whiteList, generateData.get(0)[0]);
+		assertEquals(expectedTableNames, generateData.get(0)[1]);
 	}
 
 	@Test
