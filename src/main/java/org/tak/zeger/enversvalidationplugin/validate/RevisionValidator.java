@@ -198,7 +198,6 @@ public class RevisionValidator
 		validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
-	// TODO: Validate Each Remove revision has all its non-primary key columns set to NULL, including parent table.
 	@Validate
 	public void validateRemoveRevisions() throws SQLException, DataSetException
 	{
