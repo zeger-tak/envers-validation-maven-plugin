@@ -21,7 +21,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "validate")
 public class EnversValidationMojo extends AbstractMojo
 {
-	private static final String PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS = "org.tak.zeger.enversvalidationplugin.validate";
+	private static final String PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS = "com.github.zeger_tak.enversvalidationplugin.validate";
 
 	/**
 	 * Properties file for the connection information.

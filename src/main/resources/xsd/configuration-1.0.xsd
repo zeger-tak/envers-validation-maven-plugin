@@ -4,7 +4,7 @@
 		targetNamespace="http://zeger-tak.github.com/envers-validation/configuration_1-0"
 		elementFormDefault="qualified">
 
-	<element name="ConfigurationFile">
+	<element name="configurationFile">
 		<complexType>
 			<sequence>
 				<element name="auditTableInformation" type="tns:AuditTableInformationType" minOccurs="0" maxOccurs="unbounded"/>

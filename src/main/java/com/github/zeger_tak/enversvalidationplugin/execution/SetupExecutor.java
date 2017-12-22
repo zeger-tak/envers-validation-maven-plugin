@@ -35,9 +35,9 @@ public class SetupExecutor extends AbstractExecutor
 
 		final Map<TargetPhase, Set<Class<?>>> validatorsGroupedByTargetPhase = groupByTargetPhase(allValidators);
 		Map<String, AuditTableInformation> auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.SETUP, providedAuditTableInformationMap, validationResults);
-		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.TABLE_STRUCTURE, providedAuditTableInformationMap, validationResults);
-		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONSTRAINTS, providedAuditTableInformationMap, validationResults);
-		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONTENT, providedAuditTableInformationMap, validationResults);
+		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.TABLE_STRUCTURE, auditTableInformationMap, validationResults);
+		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONSTRAINTS, auditTableInformationMap, validationResults);
+		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONTENT, auditTableInformationMap, validationResults);
 	}
 
 	@Nonnull
