@@ -1,6 +1,9 @@
 package com.github.zeger_tak.enversvalidationplugin.entities;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -10,13 +13,20 @@ public class AuditTableInformation
 {
 	private final String auditTableName;
 	private final String contentTableName;
+	private final Set<String> columnNamesPresentInContentTableButNotInAuditTable;
 
 	private AuditTableInformation auditTableParent;
 
 	public AuditTableInformation(@Nonnull String auditTableName, @Nonnull String contentTableName)
 	{
+		this(auditTableName, contentTableName, Collections.emptySet());
+	}
+
+	public AuditTableInformation(@Nonnull String auditTableName, @Nonnull String contentTableName, @Nonnull Set<String> columnNamesPresentInContentTableButNotInAuditTable)
+	{
 		this.auditTableName = auditTableName;
 		this.contentTableName = contentTableName;
+		this.columnNamesPresentInContentTableButNotInAuditTable = columnNamesPresentInContentTableButNotInAuditTable;
 	}
 
 	@Nonnull
@@ -40,6 +50,17 @@ public class AuditTableInformation
 	public String getContentTableName()
 	{
 		return contentTableName;
+	}
+
+	@Nonnull
+	public Set<String> getColumnNamesPresentInContentTableButNotInAuditTable()
+	{
+		final Set<String> allColumnNamesPresentInContentTableButNotInAuditTable = new HashSet<>(columnNamesPresentInContentTableButNotInAuditTable);
+		if (auditTableParent != null)
+		{
+			allColumnNamesPresentInContentTableButNotInAuditTable.addAll(auditTableParent.getColumnNamesPresentInContentTableButNotInAuditTable());
+		}
+		return Collections.unmodifiableSet(allColumnNamesPresentInContentTableButNotInAuditTable);
 	}
 
 	@Override

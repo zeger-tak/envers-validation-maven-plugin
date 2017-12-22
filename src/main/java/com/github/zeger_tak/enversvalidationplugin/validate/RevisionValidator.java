@@ -266,10 +266,15 @@ public class RevisionValidator
 		final Map<String, TableRow> incorrectColumns = new HashMap<>();
 		for (String columnName : columnNames)
 		{
-			final Object contentValue = lastRevision.getColumnValue(columnName);
+			final Object auditValue = lastRevision.getColumnValue(columnName);
 			final Object actualColumnValue = actualRecord.getColumnValue(columnName);
 
-			final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) contentValue);
+			if (auditValue == null && auditTableInformation.getColumnNamesPresentInContentTableButNotInAuditTable().contains(columnName.toUpperCase()))
+			{
+				continue;
+			}
+
+			final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) auditValue);
 			if (compare != 0)
 			{
 				if (incorrectColumns.isEmpty())
@@ -279,7 +284,7 @@ public class RevisionValidator
 				}
 
 				incorrectColumns.get("actual").addColumn(columnName, actualColumnValue);
-				incorrectColumns.get("audit").addColumn(columnName, contentValue);
+				incorrectColumns.get("audit").addColumn(columnName, auditValue);
 			}
 		}
 		return incorrectColumns;

@@ -16,6 +16,7 @@
 			<element name="auditTableName" type="string" minOccurs="1" maxOccurs="1"/>
 			<element name="auditTableParentName" type="string" minOccurs="0" maxOccurs="1"/>
 			<element name="contentTableName" type="string" minOccurs="0" maxOccurs="1"/>
+			<element name="columnNamePresentInContentTableButNotInAuditTable" type="string" minOccurs="0" maxOccurs="unbounded"/>
 		</sequence>
 	</complexType>
 </schema>

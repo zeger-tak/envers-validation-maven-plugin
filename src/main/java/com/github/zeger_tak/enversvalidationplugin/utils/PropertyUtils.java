@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -108,7 +109,7 @@ public final class PropertyUtils
 		{
 			final String auditTableName = auditTableInformationType.getAuditTableName();
 			final String contentTableName = parseContentTableName(auditTableInformationType, auditTablePostFix);
-			auditTableInformationMap.putIfAbsent(auditTableName, new AuditTableInformation(auditTableName, contentTableName));
+			auditTableInformationMap.putIfAbsent(auditTableName, new AuditTableInformation(auditTableName, contentTableName, new HashSet<>(auditTableInformationType.getColumnNamePresentInContentTableButNotInAuditTable())));
 			final AuditTableInformation auditTableInformation = auditTableInformationMap.get(auditTableName);
 
 			final String auditTableParentName = auditTableInformationType.getAuditTableParentName();
@@ -120,8 +121,8 @@ public final class PropertyUtils
 					throw new MojoFailureException("Unable to construct the audit table information tree as " + auditTableInformationType + " has a parent audit table for which no " + AuditTableInformationType.class.getSimpleName() + " was configured.");
 				}
 
-				auditTableInformationMap.putIfAbsent(parentAuditTableInformationType.getAuditTableName(), new AuditTableInformation(parentAuditTableInformationType.getAuditTableName(), parseContentTableName(parentAuditTableInformationType, auditTablePostFix)));
-				final AuditTableInformation parentAuditTableInformation = auditTableInformationMap.get(auditTableParentName);
+				auditTableInformationMap.putIfAbsent(parentAuditTableInformationType.getAuditTableName(), new AuditTableInformation(parentAuditTableInformationType.getAuditTableName(), parseContentTableName(parentAuditTableInformationType, auditTablePostFix), new HashSet<>(parentAuditTableInformationType.getColumnNamePresentInContentTableButNotInAuditTable())));
+				final AuditTableInformation parentAuditTableInformation = auditTableInformationMap.get(auditTableParentName);				
 				auditTableInformation.setAuditTableParent(parentAuditTableInformation);
 			}
 		}
