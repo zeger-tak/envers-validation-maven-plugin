@@ -33,8 +33,8 @@ The plugin connects with your database and will inform you of the following:
         <!--Add the following to ignore specific validations-->
         <ignorables>
             <ignorable>RevisionValidator</ignorable> <!--To ignore the entire validator. -->
-            <ignorable>RevisionValidator.validateAllRecordsInAuditedTableHaveAValidLatestRevision</ignorable> <!--To ignore a specific validation method.-->
-            <ignorable>RevisionValidator.validateAllRecordsInAuditedTableHaveAValidLatestRevision.CONTENT_TABLE_NAME</ignorable> <!--To ignore a specific run of a validation method.-->
+            <ignorable>RevisionValidator.validateAllRecordsInContentTableHaveAValidLatestRevision</ignorable> <!--To ignore a specific validation method.-->
+            <ignorable>RevisionValidator.validateAllRecordsInContentTableHaveAValidLatestRevision.CONTENT_TABLE_NAME</ignorable> <!--To ignore a specific run of a validation method.-->
         </ignorables>
     </configuration>
     <dependencies>
@@ -61,18 +61,28 @@ driver=org.postgresql.Driver #example of the driver class.
 username=dbuser
 password=dbpassword
 
-whiteListPropertyFile=src/test/resources/known_audit_tables.properties #relative path to the whitelist property file.
+auditTableInformationFile=src/test/resources/known_audit_tables.xml #relative path to the audit table information file.
 ```
 
-### Whitelist property file
-The whitelist property file is a regular property file.
-On each line the property key is filled with the name of the audit table and the property value is filled with the name of the table holding the current content.
-The property value will be automatically resolved if it is not provided by taking the audit table name and removing the default appendix of _aud.
-So for a database with 3 audit tables and 3 content tables the file might look like the following:
+### Audit table information file
+The audit table information file is an XML file validated against the XSD file found under: src/main/resources/xsd/configuration-1.0.xsd
+An example XML file:
 ```
-TABLE_NAME_1_AUD=  #the resolved content table name will be TABLE_NAME_1
-TABLE_NAME_2_AUDIT=NAME_TABLE_2 #here the content table name is provided because the name cannot be automatically resolved by removing the appendix.
-TABLE_NAME_3_AUD=TABLE_NAME_3 #here the content table name is provided even though the content table name could have been resolved automatically. 
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationFile xmlns="http://zeger-tak.github.com/envers-validation/configuration_1-0">
+	<auditTableInformation>
+		<auditTableName>EXAMPLE_TABLE_AUD</auditTableName>
+		<auditTableParentName>EXAMPLE_TABLE_PARENT_AUD</auditTableParentName>
+		<contentTableName>EXAMPLE_TABLE</contentTableName>
+	</auditTableInformation>
+	<auditTableInformation>
+		<auditTableName>EXAMPLE_TABLE_PARENT_AUD</auditTableName>
+		<contentTableName>EXAMPLE_TABLE_PARENT</contentTableName>
+	</auditTableInformation>
+	<auditTableInformation>
+		<auditTableName>EXAM_TABLE_WITHOUT_PARENTS_AUD</auditTableName>
+	</auditTableInformation>
+</configurationFile> 
 ```
 
 ### Executing the plugin
