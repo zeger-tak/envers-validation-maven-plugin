@@ -18,11 +18,11 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
+import org.tak.zeger.enversvalidationplugin.configuration.AuditTableInformationType;
+import org.tak.zeger.enversvalidationplugin.configuration.ConfigurationFile;
+import org.tak.zeger.enversvalidationplugin.configuration.ObjectFactory;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
-import org.tak.zeger.enversvalidationplugin.whitelist.ObjectFactory;
-import org.tak.zeger.enversvalidationplugin.whitelist.WhiteListEntryFile;
-import org.tak.zeger.enversvalidationplugin.whitelist.WhitelistEntryType;
 
 public final class PropertyUtils
 {
@@ -89,8 +89,8 @@ public final class PropertyUtils
 		{
 			final JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			final WhiteListEntryFile whiteListEntryFile = (WhiteListEntryFile) unmarshaller.unmarshal(file);
-			return createWhitelist(whiteListEntryFile, auditTablePostFix);
+			final ConfigurationFile configurationFile = (ConfigurationFile) unmarshaller.unmarshal(file);
+			return createWhitelist(configurationFile, auditTablePostFix);
 		}
 		catch (JAXBException | RuntimeException e)
 		{
@@ -99,12 +99,12 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	private static Map<String, WhitelistEntry> createWhitelist(WhiteListEntryFile whiteListEntryFile, @Nonnull String auditTablePostFix) throws MojoFailureException
+	private static Map<String, WhitelistEntry> createWhitelist(ConfigurationFile whiteListEntryFile, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
-		final Map<String, WhitelistEntryType> whitelistTypes = convertToMap(whiteListEntryFile.getWhitelistEntry());
+		final Map<String, AuditTableInformationType> whitelistTypes = convertToMap(whiteListEntryFile.getAuditTableInformation());
 		final Map<String, WhitelistEntry> whiteList = new HashMap<>();
 
-		for (WhitelistEntryType whitelistEntryType : whitelistTypes.values())
+		for (AuditTableInformationType whitelistEntryType : whitelistTypes.values())
 		{
 			final String auditTableName = whitelistEntryType.getAuditTableName();
 			final String contentTableName = parseContentTableName(whitelistEntryType, auditTablePostFix);
@@ -114,10 +114,10 @@ public final class PropertyUtils
 			final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
 			if (StringUtils.isNotBlank(auditTableParentName))
 			{
-				final WhitelistEntryType parentWhitelistEntryType = whitelistTypes.get(auditTableParentName);
+				final AuditTableInformationType parentWhitelistEntryType = whitelistTypes.get(auditTableParentName);
 				if (parentWhitelistEntryType == null)
 				{
-					throw new MojoFailureException("Unable to construct the whitelist tree as " + whitelistEntryType + " has a parent audit table for which no " + WhitelistEntryType.class.getSimpleName() + " was configured.");
+					throw new MojoFailureException("Unable to construct the whitelist tree as " + whitelistEntryType + " has a parent audit table for which no " + AuditTableInformationType.class.getSimpleName() + " was configured.");
 				}
 
 				whiteList.putIfAbsent(parentWhitelistEntryType.getAuditTableName(), new WhitelistEntry(parentWhitelistEntryType.getAuditTableName(), parseContentTableName(parentWhitelistEntryType, auditTablePostFix)));
@@ -129,7 +129,7 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	private static String parseContentTableName(@Nonnull WhitelistEntryType whitelistEntryType, @Nonnull String auditTablePostFix)
+	private static String parseContentTableName(@Nonnull AuditTableInformationType whitelistEntryType, @Nonnull String auditTablePostFix)
 	{
 		return StringUtils.isBlank(whitelistEntryType.getContentTableName()) ? whitelistEntryType.getAuditTableName().replaceAll(auditTablePostFix, "") : whitelistEntryType.getContentTableName();
 	}
@@ -151,8 +151,8 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	private static Map<String, WhitelistEntryType> convertToMap(@Nonnull List<WhitelistEntryType> list)
+	private static Map<String, AuditTableInformationType> convertToMap(@Nonnull List<AuditTableInformationType> list)
 	{
-		return list.stream().collect(Collectors.toMap(WhitelistEntryType::getAuditTableName, Function.identity()));
+		return list.stream().collect(Collectors.toMap(AuditTableInformationType::getAuditTableName, Function.identity()));
 	}
 }

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
-		xmlns:tns="http://zeger-tak.github.com/envers-validation/whitelist_1-0"
-		targetNamespace="http://zeger-tak.github.com/envers-validation/whitelist_1-0"
+		xmlns:tns="http://zeger-tak.github.com/envers-validation/configuration_1-0"
+		targetNamespace="http://zeger-tak.github.com/envers-validation/configuration_1-0"
 		elementFormDefault="qualified">
 
-	<element name="whiteListEntryFile">
+	<element name="ConfigurationFile">
 		<complexType>
 			<sequence>
-				<element name="whitelistEntry" type="tns:WhitelistEntryType" minOccurs="0" maxOccurs="unbounded"/>
+				<element name="auditTableInformation" type="tns:AuditTableInformationType" minOccurs="0" maxOccurs="unbounded"/>
 			</sequence>
 		</complexType>
 	</element>
-	<complexType name="WhitelistEntryType">
+	<complexType name="AuditTableInformationType">
 		<sequence>
 			<element name="auditTableName" type="string" minOccurs="1" maxOccurs="1"/>
 			<element name="auditTableParentName" type="string" minOccurs="0" maxOccurs="1"/>
