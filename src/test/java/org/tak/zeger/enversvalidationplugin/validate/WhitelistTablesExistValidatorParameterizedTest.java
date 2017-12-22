@@ -23,26 +23,26 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @RunWith(Parameterized.class)
 public class WhitelistTablesExistValidatorParameterizedTest
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final WhitelistEntry whitelistEntry;
+	private final AuditTableInformation auditTableInformation;
 	private final WhitelistTablesExistValidator validator;
 	private final DatabaseQueries queries;
 	private final String expectedExceptionMessage;
 
-	public WhitelistTablesExistValidatorParameterizedTest(@Nonnull String testName, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> allTableNames, @Nonnull List<String> tablesThatDoNotExist, @Nullable String expectedExceptionMessage) throws SQLException, DataSetException
+	public WhitelistTablesExistValidatorParameterizedTest(@Nonnull String testName, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> allTableNames, @Nonnull List<String> tablesThatDoNotExist, @Nullable String expectedExceptionMessage) throws SQLException, DataSetException
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
 		queries = mock(DatabaseQueries.class);
-		validator = new WhitelistTablesExistValidator(connectionProvider, whitelistEntry.getAuditTableName(), whitelistEntry);
+		validator = new WhitelistTablesExistValidator(connectionProvider, auditTableInformation.getAuditTableName(), auditTableInformation);
 
 		this.expectedExceptionMessage = expectedExceptionMessage;
-		this.whitelistEntry = whitelistEntry;
+		this.auditTableInformation = auditTableInformation;
 
 		for (String tableName : allTableNames)
 		{
@@ -62,21 +62,21 @@ public class WhitelistTablesExistValidatorParameterizedTest
 		final String contentTable3 = "content3";
 		final List<String> allTableNames = Arrays.asList(auditTable1, auditTable2, auditTable3, contentTable1, contentTable2, contentTable3);
 
-		final WhitelistEntry highestLevelEntry = new WhitelistEntry(auditTable1, contentTable1);
+		final AuditTableInformation highestLevelEntry = new AuditTableInformation(auditTable1, contentTable1);
 
-		final WhitelistEntry midLevelEntry = new WhitelistEntry("audit2", "content2");
+		final AuditTableInformation midLevelEntry = new AuditTableInformation("audit2", "content2");
 		midLevelEntry.setAuditTableParent(highestLevelEntry);
 
-		final WhitelistEntry bottomLevelEntry = new WhitelistEntry("audit3", "content3");
+		final AuditTableInformation bottomLevelEntry = new AuditTableInformation("audit3", "content3");
 		bottomLevelEntry.setAuditTableParent(midLevelEntry);
 
-		final String expectedExceptionMessageAuditTable1 = " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + auditTable1 + " does not exist.";
-		final String expectedExceptionMessageAuditTable2 = " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + auditTable2 + " does not exist.";
-		final String expectedExceptionMessageAuditTable3 = " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + auditTable3 + " does not exist.";
+		final String expectedExceptionMessageAuditTable1 = " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + auditTable1 + " does not exist.";
+		final String expectedExceptionMessageAuditTable2 = " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + auditTable2 + " does not exist.";
+		final String expectedExceptionMessageAuditTable3 = " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + auditTable3 + " does not exist.";
 
-		final String expectedExceptionMessageContentTable1 = " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + contentTable1 + " does not exist.";
-		final String expectedExceptionMessageContentTable2 = " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + contentTable2 + " does not exist.";
-		final String expectedExceptionMessageContentTable3 = " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + contentTable3 + " does not exist.";
+		final String expectedExceptionMessageContentTable1 = " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + contentTable1 + " does not exist.";
+		final String expectedExceptionMessageContentTable2 = " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + contentTable2 + " does not exist.";
+		final String expectedExceptionMessageContentTable3 = " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + contentTable3 + " does not exist.";
 
 		return Arrays.asList(new Object[][] {
 				//@formatter:off

@@ -16,26 +16,26 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.SetupValidationForSpecificWhitelistEntryException;
 
 @ValidationType(TargetPhase.SETUP)
 public class WhitelistTablesExistValidator
 {
-	private final WhitelistEntry whitelistEntry;
+	private final AuditTableInformation auditTableInformation;
 	private ConnectionProviderInstance connectionProvider;
 
-	public WhitelistTablesExistValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditTableName, @Nonnull WhitelistEntry whitelistEntry)
+	public WhitelistTablesExistValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditTableName, @Nonnull AuditTableInformation auditTableInformation)
 	{
 		this.connectionProvider = connectionProvider;
-		this.whitelistEntry = whitelistEntry;
+		this.auditTableInformation = auditTableInformation;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList)
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, AuditTableInformation> whiteList)
 	{
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, AuditTableInformation> whiteListEntry : whiteList.entrySet())
 		{
 			testData.add(new Object[] { connectionProvider, whiteListEntry.getKey(), whiteListEntry.getValue() });
 		}
@@ -52,20 +52,20 @@ public class WhitelistTablesExistValidator
 	{
 		try
 		{
-			determineIfTablesExist(whitelistEntry);
+			determineIfTablesExist(auditTableInformation);
 		}
 		catch (TableDoesNotExistException e)
 		{
-			throw new SetupValidationForSpecificWhitelistEntryException(whitelistEntry + " is not a valid " + WhitelistEntry.class.getSimpleName() + " because the table " + e.tableName + " does not exist.", whitelistEntry);
+			throw new SetupValidationForSpecificWhitelistEntryException(auditTableInformation + " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + e.tableName + " does not exist.", auditTableInformation);
 		}
 	}
 
-	private void determineIfTablesExist(@Nonnull WhitelistEntry whitelistEntry) throws SQLException, DataSetException
+	private void determineIfTablesExist(@Nonnull AuditTableInformation auditTableInformation) throws SQLException, DataSetException
 	{
-		assertTableExists(whitelistEntry.getAuditTableName());
-		assertTableExists(whitelistEntry.getContentTableName());
+		assertTableExists(auditTableInformation.getAuditTableName());
+		assertTableExists(auditTableInformation.getContentTableName());
 
-		final WhitelistEntry parentAuditTable = whitelistEntry.getAuditTableParent();
+		final AuditTableInformation parentAuditTable = auditTableInformation.getAuditTableParent();
 		if (parentAuditTable != null)
 		{
 			determineIfTablesExist(parentAuditTable);

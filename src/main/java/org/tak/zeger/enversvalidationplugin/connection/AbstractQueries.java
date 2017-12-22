@@ -14,8 +14,8 @@ import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.Column;
 import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITableMetaData;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 
 public abstract class AbstractQueries implements DatabaseQueries
 {
@@ -54,9 +54,9 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public Map<String, TableRow> getContentRecords(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	public Map<String, TableRow> getContentRecords(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(databaseConnection, whitelistEntry, primaryIdentifierColumnNames);
+		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(databaseConnection, auditTableInformation, primaryIdentifierColumnNames);
 		final List<String> columnNames = getColumnNames(recordsInAuditedTable);
 
 		final Map<String, TableRow> recordsInTableById = new HashMap<>();
@@ -76,35 +76,35 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTable(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation auditTableInformation, List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final String query = createContentTableSelectQuery(whitelistEntry, primaryIdentifierColumnNames);
-		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelistEntry.getContentTableName(), query);
+		final String query = createContentTableSelectQuery(auditTableInformation, primaryIdentifierColumnNames);
+		return (CachedResultSetTable) databaseConnection.createQueryTable(auditTableInformation.getContentTableName(), query);
 	}
 
 	@Nonnull
-	private String createContentTableSelectQuery(@Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames)
+	private String createContentTableSelectQuery(@Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNames)
 	{
 		final StringBuilder query = new StringBuilder("select * from ");
-		query.append(whitelistEntry.getContentTableName());
+		query.append(auditTableInformation.getContentTableName());
 		query.append(" ");
-		query.append(whitelistEntry.getContentTableName());
+		query.append(auditTableInformation.getContentTableName());
 		query.append(" ");
 
-		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		final AuditTableInformation auditTableParent = auditTableInformation.getAuditTableParent();
 		if (auditTableParent != null)
 		{
-			appendQueryWithJoinsOnParentContentTables(query, auditTableParent, whitelistEntry.getContentTableName(), primaryIdentifierColumnNames);
+			appendQueryWithJoinsOnParentContentTables(query, auditTableParent, auditTableInformation.getContentTableName(), primaryIdentifierColumnNames);
 		}
 		return query.toString();
 	}
 
-	private void appendQueryWithJoinsOnParentContentTables(@Nonnull StringBuilder query, @Nonnull WhitelistEntry whitelistEntry, @Nonnull String childAlias, @Nonnull List<String> primaryIdentifierColumnNames)
+	private void appendQueryWithJoinsOnParentContentTables(@Nonnull StringBuilder query, @Nonnull AuditTableInformation auditTableInformation, @Nonnull String childAlias, @Nonnull List<String> primaryIdentifierColumnNames)
 	{
 		query.append("inner join ");
-		query.append(whitelistEntry.getContentTableName());
+		query.append(auditTableInformation.getContentTableName());
 		query.append(" ");
-		query.append(whitelistEntry.getContentTableName());
+		query.append(auditTableInformation.getContentTableName());
 		query.append(" on ");
 		for (int i = 0; i < primaryIdentifierColumnNames.size(); i++)
 		{
@@ -114,7 +114,7 @@ public abstract class AbstractQueries implements DatabaseQueries
 				query.append(" and ");
 			}
 
-			query.append(whitelistEntry.getContentTableName());
+			query.append(auditTableInformation.getContentTableName());
 			query.append(".");
 			query.append(primaryIdentifierColumnName);
 			query.append(" = ");
@@ -123,10 +123,10 @@ public abstract class AbstractQueries implements DatabaseQueries
 			query.append(primaryIdentifierColumnName);
 			query.append(" ");
 		}
-		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		final AuditTableInformation auditTableParent = auditTableInformation.getAuditTableParent();
 		if (auditTableParent != null)
 		{
-			appendQueryWithJoinsOnParentContentTables(query, auditTableParent, whitelistEntry.getContentTableName(), primaryIdentifierColumnNames);
+			appendQueryWithJoinsOnParentContentTables(query, auditTableParent, auditTableInformation.getContentTableName(), primaryIdentifierColumnNames);
 		}
 	}
 
@@ -147,9 +147,9 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	public Map<String, List<TableRow>> getAuditRecordsGroupedByContentPrimaryKey(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(databaseConnection, whitelistEntry, primaryIdentifierColumnNames);
+		final CachedResultSetTable recordsInTable = selectAllRecordsFromTableOrderByRevAscending(databaseConnection, auditTableInformation, primaryIdentifierColumnNames);
 		final List<String> columnNames = getColumnNames(recordsInTable);
 
 		final Map<String, List<TableRow>> recordsInTableGroupedById = new HashMap<>();
@@ -172,45 +172,45 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull IDatabaseConnection databaseConnection, @Nonnull WhitelistEntry whitelist, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation whitelist, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
 		final String query = createAuditTableSelectQuery(whitelist, primaryIdentifierColumnNames);
 		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelist.getAuditTableName(), query);
 	}
 
 	@Nonnull
-	private String createAuditTableSelectQuery(@Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNames)
+	private String createAuditTableSelectQuery(@Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNames)
 	{
 		final String revisionTableIdentifierColumnName = getRevisionTableIdentifierColumnName();
 		final List<String> primaryIdentifierColumnsAuditTable = new ArrayList<>(primaryIdentifierColumnNames);
 		primaryIdentifierColumnsAuditTable.add(revisionTableIdentifierColumnName);
 
 		final StringBuilder query = new StringBuilder("select * from ");
-		query.append(whitelistEntry.getAuditTableName());
+		query.append(auditTableInformation.getAuditTableName());
 		query.append(" ");
-		query.append(whitelistEntry.getAuditTableName());
+		query.append(auditTableInformation.getAuditTableName());
 		query.append(" ");
 
-		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		final AuditTableInformation auditTableParent = auditTableInformation.getAuditTableParent();
 		if (auditTableParent != null)
 		{
-			appendQueryWithJoinsOnParentAuditTables(query, auditTableParent, whitelistEntry.getAuditTableName(), primaryIdentifierColumnsAuditTable);
+			appendQueryWithJoinsOnParentAuditTables(query, auditTableParent, auditTableInformation.getAuditTableName(), primaryIdentifierColumnsAuditTable);
 		}
 
 		query.append(" order by ");
-		query.append(whitelistEntry.getAuditTableName());
+		query.append(auditTableInformation.getAuditTableName());
 		query.append(".");
 		query.append(revisionTableIdentifierColumnName);
 
 		return query.toString();
 	}
 
-	private void appendQueryWithJoinsOnParentAuditTables(@Nonnull StringBuilder query, @Nonnull WhitelistEntry whitelistEntry, @Nonnull String childAlias, @Nonnull List<String> primaryIdentifierColumnNames)
+	private void appendQueryWithJoinsOnParentAuditTables(@Nonnull StringBuilder query, @Nonnull AuditTableInformation auditTableInformation, @Nonnull String childAlias, @Nonnull List<String> primaryIdentifierColumnNames)
 	{
 		query.append("inner join ");
-		query.append(whitelistEntry.getAuditTableName());
+		query.append(auditTableInformation.getAuditTableName());
 		query.append(" ");
-		query.append(whitelistEntry.getAuditTableName());
+		query.append(auditTableInformation.getAuditTableName());
 		query.append(" on ");
 		for (int i = 0; i < primaryIdentifierColumnNames.size(); i++)
 		{
@@ -220,7 +220,7 @@ public abstract class AbstractQueries implements DatabaseQueries
 				query.append(" and ");
 			}
 
-			query.append(whitelistEntry.getAuditTableName());
+			query.append(auditTableInformation.getAuditTableName());
 			query.append(".");
 			query.append(primaryIdentifierColumnName);
 			query.append(" = ");
@@ -229,10 +229,10 @@ public abstract class AbstractQueries implements DatabaseQueries
 			query.append(primaryIdentifierColumnName);
 			query.append(" ");
 		}
-		final WhitelistEntry auditTableParent = whitelistEntry.getAuditTableParent();
+		final AuditTableInformation auditTableParent = auditTableInformation.getAuditTableParent();
 		if (auditTableParent != null)
 		{
-			appendQueryWithJoinsOnParentAuditTables(query, auditTableParent, whitelistEntry.getAuditTableName(), primaryIdentifierColumnNames);
+			appendQueryWithJoinsOnParentAuditTables(query, auditTableParent, auditTableInformation.getAuditTableName(), primaryIdentifierColumnNames);
 		}
 	}
 

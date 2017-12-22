@@ -20,9 +20,9 @@ import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -32,24 +32,24 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class RevisionValidator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final WhitelistEntry whitelistEntry;
+	private final AuditTableInformation auditTableInformation;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
 	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
 
-	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
+	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
 	{
 		this.connectionProvider = connectionProvider;
-		this.whitelistEntry = whitelistEntry;
+		this.auditTableInformation = auditTableInformation;
 		this.recordsInAuditTable = recordsInAuditTable;
 		this.recordsInAuditedTableIdentifiedByPK = recordsInAuditedTableIdentifiedByPK;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, AuditTableInformation> whiteList) throws SQLException, DataSetException
 	{
 		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, AuditTableInformation> whiteListEntry : whiteList.entrySet())
 		{
 			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue().getContentTableName());
 
@@ -87,7 +87,7 @@ public class RevisionValidator
 				final Object columnValue = tableRow.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 				{
-					throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
+					throw new ValidationException("The audit table " + auditTableInformation.getAuditTableName() + " does not have a column referring to the revision table.");
 				}
 				final int revType = ((BigDecimal) columnValue).intValue();
 				if (!existingRecord && revType != RevisionConstants.ADD_REVISION)
@@ -108,7 +108,7 @@ public class RevisionValidator
 
 		if (!identifiersWithInvalidHistory.isEmpty())
 		{
-			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history in " + whitelistEntry.getAuditTableName() + " for the table " + whitelistEntry.getContentTableName());
+			throw new ValidationException("The following identifiers " + identifiersWithInvalidHistory + " have an invalid audit history in " + auditTableInformation.getAuditTableName() + " for the table " + auditTableInformation.getContentTableName());
 		}
 	}
 
@@ -132,7 +132,7 @@ public class RevisionValidator
 			final Object columnValue = latestRevision.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
-				throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
+				throw new ValidationException("The audit table " + auditTableInformation.getAuditTableName() + " does not have a column referring to the revision table.");
 			}
 			final int revType = ((BigDecimal) columnValue).intValue();
 			if (revType == RevisionConstants.REMOVE_REVISION)
@@ -149,7 +149,7 @@ public class RevisionValidator
 
 		if (!recordsWithAnAddOrModifyLatestRevisionButNoExistingContent.isEmpty())
 		{
-			throw new ValidationException("The following identifiers " + recordsWithAnAddOrModifyLatestRevisionButNoExistingContent + " have a latest revision of type Add/Modify but have no record present in content table " + whitelistEntry.getContentTableName() + ".");
+			throw new ValidationException("The following identifiers " + recordsWithAnAddOrModifyLatestRevisionButNoExistingContent + " have a latest revision of type Add/Modify but have no record present in content table " + auditTableInformation.getContentTableName() + ".");
 		}
 	}
 
@@ -179,7 +179,7 @@ public class RevisionValidator
 			final Object columnValue = lastRecord.getColumnValue(connectionProvider.getQueries().getRevTypeColumnName());
 			if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 			{
-				throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
+				throw new ValidationException("The audit table " + auditTableInformation.getAuditTableName() + " does not have a column referring to the revision table.");
 			}
 			final int revType = ((BigDecimal) columnValue).intValue();
 			if (revType == RevisionConstants.REMOVE_REVISION)
@@ -204,7 +204,7 @@ public class RevisionValidator
 		final Map<String, List<Object>> identifiersWithNonPrimaryKeyColumnsFilled = new HashMap<>();
 		final String revTypeColumnName = connectionProvider.getQueries().getRevTypeColumnName();
 		final String revisionTableIdentifierColumnName = connectionProvider.getQueries().getRevisionTableIdentifierColumnName();
-		final Set<String> nonnullColumns = connectionProvider.getQueries().getAllNonnullColumns(whitelistEntry.getAuditTableName());
+		final Set<String> nonnullColumns = connectionProvider.getQueries().getAllNonnullColumns(auditTableInformation.getAuditTableName());
 		for (Map.Entry<String, List<TableRow>> auditHistoryPerIdentifier : recordsInAuditTable.entrySet())
 		{
 			final List<Object> revisionsWithNullableColumnsWithNonnullValues = new ArrayList<>();
@@ -213,7 +213,7 @@ public class RevisionValidator
 				final Object columnValue = tableRow.getColumnValue(revTypeColumnName);
 				if (columnValue == RevisionConstants.DO_NOT_VALIDATE_REVISION)
 				{
-					throw new ValidationException("The audit table " + whitelistEntry.getAuditTableName() + " does not have a column referring to the revision table.");
+					throw new ValidationException("The audit table " + auditTableInformation.getAuditTableName() + " does not have a column referring to the revision table.");
 				}
 				final int revType = ((BigDecimal) columnValue).intValue();
 				if (revType != RevisionConstants.REMOVE_REVISION)
@@ -293,9 +293,9 @@ public class RevisionValidator
 			errorMessage.append("The following identifiers ");
 			errorMessage.append(identifiersWhichShouldHaveAnAddOrModifyRevision);
 			errorMessage.append(" in table ");
-			errorMessage.append(whitelistEntry.getContentTableName());
+			errorMessage.append(auditTableInformation.getContentTableName());
 			errorMessage.append(" do not have an Add/Modify revision in table ");
-			errorMessage.append(whitelistEntry.getAuditTableName());
+			errorMessage.append(auditTableInformation.getAuditTableName());
 			errorMessage.append(" as their last revision or do not have a revision at all.");
 
 			if (!rowsWithDifferentValues.isEmpty())

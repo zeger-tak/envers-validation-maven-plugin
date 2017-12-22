@@ -21,7 +21,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 public class NullableColumnsValidatorTest
@@ -30,7 +30,7 @@ public class NullableColumnsValidatorTest
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@Mock
-	private Map<String, WhitelistEntry> whiteList;
+	private Map<String, AuditTableInformation> whiteList;
 
 	@Mock
 	private ConnectionProviderInstance connectionProvider;
@@ -63,12 +63,12 @@ public class NullableColumnsValidatorTest
 		// Given
 		final String auditTable = "auditTable";
 		final String auditedTable = "auditedTable";
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(auditTable, auditedTable);
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(auditTable, auditedTable);
 
 		final List<String> pkColumnNamesAuditedTable = Collections.singletonList(auditTable);
 		final Set<String> nonNullColumns = Collections.singleton(auditTable);
 
-		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditTable, whitelistEntry)));
+		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditTable, auditTableInformation)));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditTable)).thenReturn(pkColumnNamesAuditedTable);
 		when(databaseQueries.getAllNonnullColumns(auditTable)).thenReturn(nonNullColumns);
 
@@ -78,7 +78,7 @@ public class NullableColumnsValidatorTest
 		// Then
 		assertEquals(1, testData.size());
 		assertEquals(connectionProvider, testData.get(0)[0]);
-		assertEquals(whitelistEntry, testData.get(0)[1]);
+		assertEquals(auditTableInformation, testData.get(0)[1]);
 		assertEquals(pkColumnNamesAuditedTable, testData.get(0)[2]);
 		assertEquals(nonNullColumns, testData.get(0)[3]);
 	}
@@ -90,9 +90,9 @@ public class NullableColumnsValidatorTest
 		final String tableName = "tableName";
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final Set<String> nonNullColumnNames = Collections.singleton(tableName);
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, tableName);
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(tableName, tableName);
 
-		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, whitelistEntry, pkColumnNames, nonNullColumnNames);
+		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, auditTableInformation, pkColumnNames, nonNullColumnNames);
 
 		// When
 		validator.validateAllColumnsExceptPrimaryKeyAreNullable();
@@ -103,7 +103,7 @@ public class NullableColumnsValidatorTest
 	{
 		// Given
 		final String tableName = "tableName";
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, tableName);
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(tableName, tableName);
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final String unexpectedNonNullColumnName = "unexpectedNonNullColumnName";
 		final Set<String> nonNullColumnNames = new HashSet<>();
@@ -112,7 +112,7 @@ public class NullableColumnsValidatorTest
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn("rev");
 
-		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, whitelistEntry, pkColumnNames, nonNullColumnNames);
+		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, auditTableInformation, pkColumnNames, nonNullColumnNames);
 
 		try
 		{
@@ -131,7 +131,7 @@ public class NullableColumnsValidatorTest
 	{
 		// Given
 		final String tableName = "tableName";
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(tableName, tableName);
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(tableName, tableName);
 		final List<String> pkColumnNames = Collections.singletonList(tableName);
 		final String unexpectedNonNullColumnName1 = "unexpectedNonNullColumnName1";
 		final String unexpectedNonNullColumnName2 = "unexpectedNonNullColumnName2";
@@ -142,7 +142,7 @@ public class NullableColumnsValidatorTest
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn("rev");
 
-		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, whitelistEntry, pkColumnNames, nonNullColumnNames);
+		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, auditTableInformation, pkColumnNames, nonNullColumnNames);
 
 		try
 		{

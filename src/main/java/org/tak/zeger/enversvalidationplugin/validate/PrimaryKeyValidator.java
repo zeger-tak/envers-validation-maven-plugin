@@ -18,7 +18,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -28,25 +28,25 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class PrimaryKeyValidator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final WhitelistEntry whitelistEntry;
+	private final AuditTableInformation auditTableInformation;
 	private final List<String> primaryIdentifierColumnNamesAuditTable;
 	private final List<String> primaryIdentifierColumnNamesAuditedTable;
 
-	public PrimaryKeyValidator(@ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull WhitelistEntry whitelistEntry, @Nonnull List<String> primaryIdentifierColumnNamesAuditTable, @Nonnull List<String> primaryIdentifierColumnNamesAuditedTable)
+	public PrimaryKeyValidator(@ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNamesAuditTable, @Nonnull List<String> primaryIdentifierColumnNamesAuditedTable)
 	{
 		this.connectionProvider = connectionProvider;
-		this.whitelistEntry = whitelistEntry;
+		this.auditTableInformation = auditTableInformation;
 		this.primaryIdentifierColumnNamesAuditTable = primaryIdentifierColumnNamesAuditTable;
 		this.primaryIdentifierColumnNamesAuditedTable = primaryIdentifierColumnNamesAuditedTable;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, AuditTableInformation> whiteList) throws SQLException, DataSetException
 	{
 		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
 
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, WhitelistEntry> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, AuditTableInformation> whiteListEntry : whiteList.entrySet())
 		{
 			final List<String> primaryIdentifierColumnNamesAuditTable = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getKey());
 			final List<String> primaryIdentifierColumnNamesAuditedTable = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue().getContentTableName());
@@ -69,7 +69,7 @@ public class PrimaryKeyValidator
 	{
 		if (primaryIdentifierColumnNamesAuditTable.isEmpty())
 		{
-			throw new ValidationException("Audit table " + whitelistEntry.getAuditTableName() + " has no primary key.");
+			throw new ValidationException("Audit table " + auditTableInformation.getAuditTableName() + " has no primary key.");
 		}
 
 		final Set<String> expectedAuditTablePrimaryKeyColumnNames = new HashSet<>(primaryIdentifierColumnNamesAuditedTable);
@@ -82,8 +82,8 @@ public class PrimaryKeyValidator
 		{
 			throw new ValidationException(
 					//@formatter:off
-					"Audit table " + whitelistEntry.getAuditTableName() + " has a primary key that is not compromised of the primary key columns of the content table ["
-					+ whitelistEntry.getContentTableName() + "] + [" + revisionTableIdentifierColumnName +
+					"Audit table " + auditTableInformation.getAuditTableName() + " has a primary key that is not compromised of the primary key columns of the content table ["
+					+ auditTableInformation.getContentTableName() + "] + [" + revisionTableIdentifierColumnName +
 					"] the following columns are missing: " + expectedAuditTablePrimaryKeyColumnNames
 					//@formatter:on
 			);
@@ -95,7 +95,7 @@ public class PrimaryKeyValidator
 
 		if (!actualPrimaryKeyColumnsAuditTable.isEmpty())
 		{
-			throw new ValidationException("The primary key of audit table " + whitelistEntry.getAuditTableName() + " is comprised of more columns than expected, the following columns were not expected: " + actualPrimaryKeyColumnsAuditTable + " this error may also be thrown if the content table has no primary key.");
+			throw new ValidationException("The primary key of audit table " + auditTableInformation.getAuditTableName() + " is comprised of more columns than expected, the following columns were not expected: " + actualPrimaryKeyColumnsAuditTable + " this error may also be thrown if the content table has no primary key.");
 		}
 	}
 }

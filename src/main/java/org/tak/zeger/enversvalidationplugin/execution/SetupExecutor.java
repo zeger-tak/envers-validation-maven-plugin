@@ -17,8 +17,8 @@ import org.reflections.util.ConfigurationBuilder;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.ValidationResults;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.utils.ReflectionUtils;
 
 /**
@@ -31,13 +31,13 @@ public class SetupExecutor extends AbstractExecutor
 		super(connectionProvider, log, ignorables);
 	}
 
-	public void execute(@Nonnull List<String> packagesToScanForValidators, @Nonnull Map<String, WhitelistEntry> providedWhitelist, @Nonnull ValidationResults validationResults)
+	public void execute(@Nonnull List<String> packagesToScanForValidators, @Nonnull Map<String, AuditTableInformation> providedWhitelist, @Nonnull ValidationResults validationResults)
 	{
 		final Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ReflectionUtils.getPackages(packagesToScanForValidators)).setScanners(new SubTypesScanner(), new FieldAnnotationsScanner(), new TypeAnnotationsScanner()));
 		final Set<Class<?>> allValidators = reflections.getTypesAnnotatedWith(ValidationType.class);
 
 		final Map<TargetPhase, Set<Class<?>>> validatorsGroupedByTargetPhase = groupByTargetPhase(allValidators);
-		Map<String, WhitelistEntry> whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.SETUP, providedWhitelist, validationResults);
+		Map<String, AuditTableInformation> whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.SETUP, providedWhitelist, validationResults);
 		whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.TABLE_STRUCTURE, providedWhitelist, validationResults);
 		whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONSTRAINTS, providedWhitelist, validationResults);
 		whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONTENT, providedWhitelist, validationResults);

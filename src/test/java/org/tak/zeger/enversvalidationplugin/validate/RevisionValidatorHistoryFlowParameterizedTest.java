@@ -22,9 +22,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 @RunWith(Parameterized.class)
@@ -40,7 +40,7 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 	public RevisionValidatorHistoryFlowParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
-		validator = new RevisionValidator(connectionProvider, new WhitelistEntry("auditTableName", "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
+		validator = new RevisionValidator(connectionProvider, new AuditTableInformation("auditTableName", "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
 		this.expectedExceptionMessageValidFlow = expectedExceptionMessageValidFlow;
 		this.expectedExceptionMessageAddOrModifyContent = expectedExceptionMessageAddOrModifyContent;
 	}

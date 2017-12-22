@@ -21,8 +21,8 @@ import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.ValidationResults;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.SetupValidationForSpecificWhitelistEntryException;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 import org.tak.zeger.enversvalidationplugin.utils.IgnoreUtils;
@@ -42,7 +42,7 @@ abstract class AbstractExecutor
 	}
 
 	@Nonnull
-	private List<ValidatorWrapper> createValidatorInstances(@Nonnull Class<?> validatorClass, @Nonnull Map<String, WhitelistEntry> whitelist, @Nonnull ValidationResults validationResults)
+	private List<ValidatorWrapper> createValidatorInstances(@Nonnull Class<?> validatorClass, @Nonnull Map<String, AuditTableInformation> whitelist, @Nonnull ValidationResults validationResults)
 	{
 		try
 		{
@@ -112,14 +112,14 @@ abstract class AbstractExecutor
 
 	@Nonnull
 	@SuppressWarnings("unchecked")
-	private List<Object[]> generateDataForConstructorArguments(@Nonnull Method parameterizedMethod, @Nonnull Map<String, WhitelistEntry> whitelist) throws IllegalAccessException, InvocationTargetException
+	private List<Object[]> generateDataForConstructorArguments(@Nonnull Method parameterizedMethod, @Nonnull Map<String, AuditTableInformation> whitelist) throws IllegalAccessException, InvocationTargetException
 	{
 		final List<Object> constructorParameters = createParametersForParameterizedMethod(parameterizedMethod, whitelist);
 		return (List<Object[]>) parameterizedMethod.invoke(null, constructorParameters.toArray());
 	}
 
 	@Nonnull
-	private List<Object> createParametersForParameterizedMethod(@Nonnull Method method, @Nonnull Map<String, WhitelistEntry> whitelist)
+	private List<Object> createParametersForParameterizedMethod(@Nonnull Method method, @Nonnull Map<String, AuditTableInformation> whitelist)
 	{
 		final List<Object> methodParameters = new ArrayList<>(method.getParameterCount());
 		for (Parameter parameter : method.getParameters())
@@ -141,7 +141,7 @@ abstract class AbstractExecutor
 	}
 
 	@Nonnull
-	private Object createValidatorInstance(@Nonnull Class<?> validatorClass, @Nonnull Object[] constructorArguments, @Nonnull Map<String, WhitelistEntry> whitelist) throws InstantiationException, IllegalAccessException, InvocationTargetException
+	private Object createValidatorInstance(@Nonnull Class<?> validatorClass, @Nonnull Object[] constructorArguments, @Nonnull Map<String, AuditTableInformation> whitelist) throws InstantiationException, IllegalAccessException, InvocationTargetException
 	{
 		final Object newInstance = validatorClass.getConstructors()[0].newInstance(constructorArguments);
 
@@ -168,9 +168,9 @@ abstract class AbstractExecutor
 	}
 
 	@Nonnull
-	Map<String, WhitelistEntry> executeValidators(@Nonnull Map<TargetPhase, Set<Class<?>>> validators,  @Nonnull TargetPhase targetPhase, @Nonnull Map<String, WhitelistEntry> providedWhitelist, @Nonnull ValidationResults validationResults)
+	Map<String, AuditTableInformation> executeValidators(@Nonnull Map<TargetPhase, Set<Class<?>>> validators, @Nonnull TargetPhase targetPhase, @Nonnull Map<String, AuditTableInformation> providedWhitelist, @Nonnull ValidationResults validationResults)
 	{
-		final Map<String, WhitelistEntry> returnWhitelist = new HashMap<>(providedWhitelist);
+		final Map<String, AuditTableInformation> returnWhitelist = new HashMap<>(providedWhitelist);
 		final Set<Class<?>> valdidatorsForTargetPhase = validators.getOrDefault(targetPhase, Collections.emptySet());
 		for (Class<?> validator : valdidatorsForTargetPhase)
 		{
@@ -211,7 +211,7 @@ abstract class AbstractExecutor
 							errorMessage = e.getCause().getMessage();
 							if (e.getCause() instanceof SetupValidationForSpecificWhitelistEntryException)
 							{
-								returnWhitelist.remove(((SetupValidationForSpecificWhitelistEntryException) e.getCause()).getWhitelistEntry().getAuditTableName());
+								returnWhitelist.remove(((SetupValidationForSpecificWhitelistEntryException) e.getCause()).getAuditTableInformation().getAuditTableName());
 							}
 						}
 						else

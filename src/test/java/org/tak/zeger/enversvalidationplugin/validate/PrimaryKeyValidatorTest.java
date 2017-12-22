@@ -23,7 +23,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 public class PrimaryKeyValidatorTest
@@ -51,7 +51,7 @@ public class PrimaryKeyValidatorTest
 	public void testGenerateTestDataWithEmptySet() throws SQLException, DataSetException
 	{
 		//Given
-		final Map<String, WhitelistEntry> whiteList = new HashMap<>();
+		final Map<String, AuditTableInformation> whiteList = new HashMap<>();
 
 		// When
 		final List<Object[]> testData = PrimaryKeyValidator.generateTestData(connectionProvider, whiteList);
@@ -64,8 +64,8 @@ public class PrimaryKeyValidatorTest
 	public void testGenerateTestData() throws SQLException, DataSetException
 	{
 		//Given
-		final WhitelistEntry whitelistEntry = new WhitelistEntry(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME);
-		final Map<String, WhitelistEntry> whiteList = Collections.singletonMap(AUDIT_TABLE_NAME, whitelistEntry);
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME);
+		final Map<String, AuditTableInformation> whiteList = Collections.singletonMap(AUDIT_TABLE_NAME, auditTableInformation);
 
 		final List<String> pkColumnsAuditedTable = Collections.singletonList(CONTENT_TABLE_NAME);
 		when(databaseQueries.getPrimaryKeyColumnNames(CONTENT_TABLE_NAME)).thenReturn(pkColumnsAuditedTable);
@@ -80,7 +80,7 @@ public class PrimaryKeyValidatorTest
 		verify(connectionProvider, atLeastOnce()).getQueries();
 		assertEquals(1, testData.size());
 		final Object[] testRow = testData.get(0);
-		assertEquals(whitelistEntry, testRow[1]);
+		assertEquals(auditTableInformation, testRow[1]);
 		assertEquals(pkColumnsAuditTable, testRow[2]);
 		assertEquals(pkColumnsAuditedTable, testRow[3]);
 	}
@@ -89,7 +89,7 @@ public class PrimaryKeyValidatorTest
 	public void testValidateAuditTableHasAValidPrimaryKeyWithoutPKColumns()
 	{
 		// Given
-		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.emptyList(), Collections.emptyList());
+		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.emptyList(), Collections.emptyList());
 
 		try
 		{
@@ -108,7 +108,7 @@ public class PrimaryKeyValidatorTest
 	public void testValidateAuditTableHasAValidPrimaryKeyWithPKColumnsOnAuditedTableButNoPKColumnsOnAuditTable()
 	{
 		// Given
-		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME), Collections.emptyList());
+		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME), Collections.emptyList());
 		when(databaseQueries.getRevisionTableIdentifierColumnName()).thenReturn("rev");
 
 		try
@@ -128,7 +128,7 @@ public class PrimaryKeyValidatorTest
 	public void testValidateAuditTableHasAValidPrimaryKeyWithPKColumnsOnAuditedTableButMorePKColumnsOnAuditTable()
 	{
 		// Given
-		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Arrays.asList("unexpected", REVISION_COLUMN_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME));
+		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Arrays.asList("unexpected", REVISION_COLUMN_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME));
 		when(databaseQueries.getRevisionTableIdentifierColumnName()).thenReturn(REVISION_COLUMN_NAME);
 
 		try
@@ -148,7 +148,7 @@ public class PrimaryKeyValidatorTest
 	public void testValidateAuditTableHasAValidPrimaryKey()
 	{
 		// Given
-		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new WhitelistEntry(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Arrays.asList(REVISION_COLUMN_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME));
+		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Arrays.asList(REVISION_COLUMN_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME));
 		when(databaseQueries.getRevisionTableIdentifierColumnName()).thenReturn(REVISION_COLUMN_NAME);
 
 		// When

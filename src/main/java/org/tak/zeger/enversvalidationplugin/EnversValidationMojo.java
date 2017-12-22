@@ -12,8 +12,8 @@ import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.ValidationResults;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 import org.tak.zeger.enversvalidationplugin.execution.SetupExecutor;
 import org.tak.zeger.enversvalidationplugin.utils.PropertyUtils;
@@ -60,7 +60,7 @@ public class EnversValidationMojo extends AbstractMojo
 	public void execute() throws MojoFailureException
 	{
 		final ConnectionProviderInstance connectionProvider = PropertyUtils.getConnectionProperties(connectionPropertyFile);
-		final Map<String, WhitelistEntry> whiteList = PropertyUtils.getWhiteList(connectionProvider.getWhiteListPropertyFile(), connectionProvider.getQueries().getAuditTablePostFix());
+		final Map<String, AuditTableInformation> whiteList = PropertyUtils.getWhiteList(connectionProvider.getWhiteListPropertyFile(), connectionProvider.getQueries().getAuditTablePostFix());
 
 		final ValidationResults validationResults = new ValidationResults();
 		packageToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);

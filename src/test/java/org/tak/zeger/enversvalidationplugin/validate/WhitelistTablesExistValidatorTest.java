@@ -15,7 +15,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 
 @RunWith(PowerMockRunner.class)
 public class WhitelistTablesExistValidatorTest
@@ -27,7 +27,7 @@ public class WhitelistTablesExistValidatorTest
 	public void testGenerateTestDataWithEmptyWhitelist()
 	{
 		// Given
-		final Map<String, WhitelistEntry> whitelist = Collections.emptyMap();
+		final Map<String, AuditTableInformation> whitelist = Collections.emptyMap();
 
 		// When
 		final List<Object[]> testData = WhitelistTablesExistValidator.generateTestData(connectionProvider, whitelist);
@@ -40,29 +40,29 @@ public class WhitelistTablesExistValidatorTest
 	public void testGenerateTestDataWithFilledWhitelist()
 	{
 		// Given
-		final WhitelistEntry whitelistEntry1 = new WhitelistEntry("1", "1");
-		final WhitelistEntry whitelistEntry2 = new WhitelistEntry("2", "2");
-		final WhitelistEntry whitelistEntry3 = new WhitelistEntry("3", "3");
+		final AuditTableInformation auditTableInformation1 = new AuditTableInformation("1", "1");
+		final AuditTableInformation auditTableInformation2 = new AuditTableInformation("2", "2");
+		final AuditTableInformation auditTableInformation3 = new AuditTableInformation("3", "3");
 
-		final Map<String, WhitelistEntry> whitelist = new HashMap<>();
-		whitelist.putIfAbsent("1", whitelistEntry1);
-		whitelist.putIfAbsent("2", whitelistEntry2);
-		whitelist.putIfAbsent("3", whitelistEntry3);
+		final Map<String, AuditTableInformation> whitelist = new HashMap<>();
+		whitelist.putIfAbsent("1", auditTableInformation1);
+		whitelist.putIfAbsent("2", auditTableInformation2);
+		whitelist.putIfAbsent("3", auditTableInformation3);
 
 		// When
 		final List<Object[]> testData = WhitelistTablesExistValidator.generateTestData(connectionProvider, whitelist);
 
 		// Then
 		assertEquals(3, testData.size());
-		assertTestDataEqualsWhitelist(whitelistEntry1, testData.get(0));
-		assertTestDataEqualsWhitelist(whitelistEntry2, testData.get(1));
-		assertTestDataEqualsWhitelist(whitelistEntry3, testData.get(2));
+		assertTestDataEqualsWhitelist(auditTableInformation1, testData.get(0));
+		assertTestDataEqualsWhitelist(auditTableInformation2, testData.get(1));
+		assertTestDataEqualsWhitelist(auditTableInformation3, testData.get(2));
 	}
 
-	private void assertTestDataEqualsWhitelist(@Nonnull WhitelistEntry expectedWhitelistEntry, @Nonnull Object[] testDataRow)
+	private void assertTestDataEqualsWhitelist(@Nonnull AuditTableInformation expectedAuditTableInformation, @Nonnull Object[] testDataRow)
 	{
 		assertEquals(connectionProvider, testDataRow[0]);
-		assertEquals(expectedWhitelistEntry.getAuditTableName(), testDataRow[1]);
-		assertEquals(expectedWhitelistEntry, testDataRow[2]);
+		assertEquals(expectedAuditTableInformation.getAuditTableName(), testDataRow[1]);
+		assertEquals(expectedAuditTableInformation, testDataRow[2]);
 	}
 }

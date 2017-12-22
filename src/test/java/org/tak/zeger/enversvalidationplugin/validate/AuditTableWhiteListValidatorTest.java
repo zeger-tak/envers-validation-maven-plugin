@@ -20,7 +20,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 public class AuditTableWhiteListValidatorTest
@@ -32,7 +32,7 @@ public class AuditTableWhiteListValidatorTest
 	private AuditTableWhiteListValidator validator;
 
 	@Mock
-	private Map<String, WhitelistEntry> whiteList;
+	private Map<String, AuditTableInformation> whiteList;
 
 	@Mock
 	private Set<String> auditTablesInDatabase;

@@ -6,14 +6,14 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class WhitelistEntry
+public class AuditTableInformation
 {
 	private final String auditTableName;
 	private final String contentTableName;
 
-	private WhitelistEntry auditTableParent;
+	private AuditTableInformation auditTableParent;
 
-	public WhitelistEntry(@Nonnull String auditTableName, @Nonnull String contentTableName)
+	public AuditTableInformation(@Nonnull String auditTableName, @Nonnull String contentTableName)
 	{
 		this.auditTableName = auditTableName;
 		this.contentTableName = contentTableName;
@@ -26,12 +26,12 @@ public class WhitelistEntry
 	}
 
 	@CheckForNull
-	public WhitelistEntry getAuditTableParent()
+	public AuditTableInformation getAuditTableParent()
 	{
 		return auditTableParent;
 	}
 
-	public void setAuditTableParent(@Nullable WhitelistEntry auditTableParent)
+	public void setAuditTableParent(@Nullable AuditTableInformation auditTableParent)
 	{
 		this.auditTableParent = auditTableParent;
 	}
@@ -53,7 +53,7 @@ public class WhitelistEntry
 		{
 			return false;
 		}
-		WhitelistEntry that = (WhitelistEntry) o;
+		AuditTableInformation that = (AuditTableInformation) o;
 		return Objects.equals(auditTableName, that.auditTableName);
 	}
 

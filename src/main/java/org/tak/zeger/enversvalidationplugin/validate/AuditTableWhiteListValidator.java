@@ -17,7 +17,7 @@ import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
 import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -26,17 +26,17 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 @ValidationType(TargetPhase.TABLE_STRUCTURE)
 public class AuditTableWhiteListValidator
 {
-	private final Map<String, WhitelistEntry> whiteList;
+	private final Map<String, AuditTableInformation> whiteList;
 	private final Set<String> auditTablesInDatabase;
 
-	public AuditTableWhiteListValidator(@Nonnull Map<String, WhitelistEntry> whiteList, @Nonnull Set<String> auditTablesInDatabase)
+	public AuditTableWhiteListValidator(@Nonnull Map<String, AuditTableInformation> whiteList, @Nonnull Set<String> auditTablesInDatabase)
 	{
 		this.whiteList = whiteList;
 		this.auditTablesInDatabase = auditTablesInDatabase;
 	}
 
 	@Parameterized(name = "auditTablesInDatabase", uniqueIdentifier = "auditTablesInDatabase")
-	public static List<Object[]> generateData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, WhitelistEntry> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, AuditTableInformation> whiteList) throws SQLException, DataSetException
 	{
 		return Collections.singletonList(new Object[] { whiteList, connectionProvider.getQueries().getTablesByNameEndingWith(connectionProvider.getQueries().getAuditTablePostFix()) });
 	}

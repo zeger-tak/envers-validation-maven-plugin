@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<whiteListEntryFile xmlns="http://zeger-tak.github.com/envers-validation/whitelist_1-0">
-	<whitelistEntry>
-		<auditTableName>BASIC_EXAMPLE_AUD</auditTableName>
-	</whitelistEntry>
-</whiteListEntryFile>

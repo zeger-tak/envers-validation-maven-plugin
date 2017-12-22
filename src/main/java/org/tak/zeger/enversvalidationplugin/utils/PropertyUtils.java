@@ -22,7 +22,7 @@ import org.tak.zeger.enversvalidationplugin.configuration.AuditTableInformationT
 import org.tak.zeger.enversvalidationplugin.configuration.ConfigurationFile;
 import org.tak.zeger.enversvalidationplugin.configuration.ObjectFactory;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
-import org.tak.zeger.enversvalidationplugin.entities.WhitelistEntry;
+import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 
 public final class PropertyUtils
 {
@@ -82,7 +82,7 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	public static Map<String, WhitelistEntry> getWhiteList(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
+	public static Map<String, AuditTableInformation> getWhiteList(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
 		final File file = new File(fileName);
 		try
@@ -99,17 +99,17 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	private static Map<String, WhitelistEntry> createWhitelist(ConfigurationFile whiteListEntryFile, @Nonnull String auditTablePostFix) throws MojoFailureException
+	private static Map<String, AuditTableInformation> createWhitelist(ConfigurationFile whiteListEntryFile, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
 		final Map<String, AuditTableInformationType> whitelistTypes = convertToMap(whiteListEntryFile.getAuditTableInformation());
-		final Map<String, WhitelistEntry> whiteList = new HashMap<>();
+		final Map<String, AuditTableInformation> whiteList = new HashMap<>();
 
 		for (AuditTableInformationType whitelistEntryType : whitelistTypes.values())
 		{
 			final String auditTableName = whitelistEntryType.getAuditTableName();
 			final String contentTableName = parseContentTableName(whitelistEntryType, auditTablePostFix);
-			whiteList.putIfAbsent(auditTableName, new WhitelistEntry(auditTableName, contentTableName));
-			final WhitelistEntry whitelistEntry = whiteList.get(auditTableName);
+			whiteList.putIfAbsent(auditTableName, new AuditTableInformation(auditTableName, contentTableName));
+			final AuditTableInformation auditTableInformation = whiteList.get(auditTableName);
 
 			final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
 			if (StringUtils.isNotBlank(auditTableParentName))
@@ -120,9 +120,9 @@ public final class PropertyUtils
 					throw new MojoFailureException("Unable to construct the whitelist tree as " + whitelistEntryType + " has a parent audit table for which no " + AuditTableInformationType.class.getSimpleName() + " was configured.");
 				}
 
-				whiteList.putIfAbsent(parentWhitelistEntryType.getAuditTableName(), new WhitelistEntry(parentWhitelistEntryType.getAuditTableName(), parseContentTableName(parentWhitelistEntryType, auditTablePostFix)));
-				final WhitelistEntry parentWhitelistEntry = whiteList.get(auditTableParentName);
-				whitelistEntry.setAuditTableParent(parentWhitelistEntry);
+				whiteList.putIfAbsent(parentWhitelistEntryType.getAuditTableName(), new AuditTableInformation(parentWhitelistEntryType.getAuditTableName(), parseContentTableName(parentWhitelistEntryType, auditTablePostFix)));
+				final AuditTableInformation parentAuditTableInformation = whiteList.get(auditTableParentName);
+				auditTableInformation.setAuditTableParent(parentAuditTableInformation);
 			}
 		}
 		return whiteList;
