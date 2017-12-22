@@ -22,7 +22,9 @@ The plugin connects with your database and will inform you of the following:
     - If the history of a specific record is invalid. For example: Starting with an 'Modify' or 'Remove' revision, as these can only exist after an 'Add' revision and indicates missing revisions.
     - If the content has a column 'ENABLED' and the value of this column = 'true', but the latest revision has a value of 'false' then a validation error will be thrown.
     - The content no longer exists in the content table, but the latest revision for the primary key is 'Add' or 'Modify' instead of 'Remove'.
-    - The latest revision is 'Remove' but there is still a record in the content table.  
+    - The latest revision is 'Remove' but there is still a record in the content table. 
+    - Remove revisions with nonnull values in nullable columsn for a Remove revision. Remove revisions should only have values in the primary key columns and the revtype column.
+    - Revisions without a revtype.
 
 ## How to use the plugin
 ### Pom.xml
