@@ -18,48 +18,48 @@ import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstanc
 import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 
 @RunWith(PowerMockRunner.class)
-public class WhitelistTablesExistValidatorTest
+public class ConfiguredAuditTablesExistValidatorTest
 {
 	@Mock
 	private ConnectionProviderInstance connectionProvider;
 
 	@Test
-	public void testGenerateTestDataWithEmptyWhitelist()
+	public void testGenerateTestDataWithEmptyAuditTableInformationMap()
 	{
 		// Given
-		final Map<String, AuditTableInformation> whitelist = Collections.emptyMap();
+		final Map<String, AuditTableInformation> auditTableInformationMap = Collections.emptyMap();
 
 		// When
-		final List<Object[]> testData = WhitelistTablesExistValidator.generateTestData(connectionProvider, whitelist);
+		final List<Object[]> testData = ConfiguredAuditTablesExistValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertTrue(testData.isEmpty());
 	}
 
 	@Test
-	public void testGenerateTestDataWithFilledWhitelist()
+	public void testGenerateTestDataWithFilledAuditTableInformationMap()
 	{
 		// Given
 		final AuditTableInformation auditTableInformation1 = new AuditTableInformation("1", "1");
 		final AuditTableInformation auditTableInformation2 = new AuditTableInformation("2", "2");
 		final AuditTableInformation auditTableInformation3 = new AuditTableInformation("3", "3");
 
-		final Map<String, AuditTableInformation> whitelist = new HashMap<>();
-		whitelist.putIfAbsent("1", auditTableInformation1);
-		whitelist.putIfAbsent("2", auditTableInformation2);
-		whitelist.putIfAbsent("3", auditTableInformation3);
+		final Map<String, AuditTableInformation> auditTableInformationMap = new HashMap<>();
+		auditTableInformationMap.putIfAbsent("1", auditTableInformation1);
+		auditTableInformationMap.putIfAbsent("2", auditTableInformation2);
+		auditTableInformationMap.putIfAbsent("3", auditTableInformation3);
 
 		// When
-		final List<Object[]> testData = WhitelistTablesExistValidator.generateTestData(connectionProvider, whitelist);
+		final List<Object[]> testData = ConfiguredAuditTablesExistValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertEquals(3, testData.size());
-		assertTestDataEqualsWhitelist(auditTableInformation1, testData.get(0));
-		assertTestDataEqualsWhitelist(auditTableInformation2, testData.get(1));
-		assertTestDataEqualsWhitelist(auditTableInformation3, testData.get(2));
+		assertTestDataEqualsAuditTableInformation(auditTableInformation1, testData.get(0));
+		assertTestDataEqualsAuditTableInformation(auditTableInformation2, testData.get(1));
+		assertTestDataEqualsAuditTableInformation(auditTableInformation3, testData.get(2));
 	}
 
-	private void assertTestDataEqualsWhitelist(@Nonnull AuditTableInformation expectedAuditTableInformation, @Nonnull Object[] testDataRow)
+	private void assertTestDataEqualsAuditTableInformation(@Nonnull AuditTableInformation expectedAuditTableInformation, @Nonnull Object[] testDataRow)
 	{
 		assertEquals(connectionProvider, testDataRow[0]);
 		assertEquals(expectedAuditTableInformation.getAuditTableName(), testDataRow[1]);

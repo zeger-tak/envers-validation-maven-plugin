@@ -36,7 +36,7 @@ public class ForeignKeyConstraintValidatorTest
 	private DatabaseQueries databaseQueries;
 
 	@Mock
-	private Map<String, String> whiteList;
+	private Map<String, String> auditTableInformationMap;
 
 	@Before
 	public void init()
@@ -45,58 +45,58 @@ public class ForeignKeyConstraintValidatorTest
 	}
 
 	@Test
-	public void testValidateNoForeignKeysExistsForNonWhiteListedTablesWithNonWhiteListedTable() throws SQLException, DataSetException
+	public void testValidateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMapWithNonSpecifiedTable() throws SQLException, DataSetException
 	{
 		// Given
-		final Set<String> tablesWithForeignKeys = Collections.singleton("not whitelisted");
+		final Set<String> tablesWithForeignKeys = Collections.singleton("not specified");
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
-		when(whiteList.keySet()).thenReturn(Collections.emptySet());
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.emptySet());
 
 		try
 		{
 			// When
-			validator.validateNoForeignKeysExistsForNonWhiteListedTables();
+			validator.validateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMap();
 			fail("Expected a " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
 		{
 			// Then
-			assertEquals("Tables found with a reference to the revision table, which are not on the white list: [not whitelisted]", e.getMessage());
+			assertEquals("Tables found with a reference to the revision table, which are not on the white list: [not specified]", e.getMessage());
 		}
 	}
 
 	@Test
-	public void testValidateNoForeignKeysExistsForNonWhiteListedTablesWithOnlyWhitelistedTables() throws SQLException, DataSetException
+	public void testValidateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMapWithOnlySpecifiedTables() throws SQLException, DataSetException
 	{
 		// Given
-		final String whitelisted = "whitelisted";
-		final Set<String> tablesWithForeignKeys = Collections.singleton(whitelisted);
-		when(whiteList.keySet()).thenReturn(Collections.singleton(whitelisted));
+		final String specified = "specified";
+		final Set<String> tablesWithForeignKeys = Collections.singleton(specified);
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton(specified));
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
 
 		// When
-		validator.validateNoForeignKeysExistsForNonWhiteListedTables();
+		validator.validateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMap();
 	}
 
 	@Test
-	public void testValidateNoForeignKeysExistsForNonWhiteListedTablesWithNoTablesInDatabase() throws SQLException, DataSetException
+	public void testValidateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMapForWithNoTablesInDatabase() throws SQLException, DataSetException
 	{
 		// Given
 		final Set<String> tablesWithForeignKeys = Collections.emptySet();
-		when(whiteList.keySet()).thenReturn(Collections.singleton("Whitelisted"));
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton("specified"));
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
 
 		// When
-		validator.validateNoForeignKeysExistsForNonWhiteListedTables();
+		validator.validateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMap();
 	}
 
 	@Test
 	public void testValidateAllAuditTablesHaveAForeignKeyToRevisionTable() throws SQLException, DataSetException
 	{
 		// Given
-		final Set<String> tablesWithForeignKeys = Collections.singleton("not whitelisted");
+		final Set<String> tablesWithForeignKeys = Collections.singleton("not specified");
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
-		when(whiteList.keySet()).thenReturn(Collections.emptySet());
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.emptySet());
 
 		// When
 		validator.validateAllAuditTablesHaveAForeignKeyToRevisionTable();
@@ -106,9 +106,9 @@ public class ForeignKeyConstraintValidatorTest
 	public void testValidateAllAuditTablesHaveAForeignKeyToRevisionTable2() throws SQLException, DataSetException
 	{
 		// Given
-		final String whitelisted = "whitelisted";
-		final Set<String> tablesWithForeignKeys = Collections.singleton(whitelisted);
-		when(whiteList.keySet()).thenReturn(Collections.singleton(whitelisted));
+		final String specified = "specified";
+		final Set<String> tablesWithForeignKeys = Collections.singleton(specified);
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton(specified));
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
 
 		// When
@@ -120,7 +120,7 @@ public class ForeignKeyConstraintValidatorTest
 	{
 		// Given
 		final Set<String> tablesWithForeignKeys = Collections.emptySet();
-		when(whiteList.keySet()).thenReturn(Collections.singleton("Whitelisted"));
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton("specified"));
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
 
 		try
@@ -130,7 +130,7 @@ public class ForeignKeyConstraintValidatorTest
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("Whitelisted audit tables found without a foreign key to the revision table[Whitelisted]", e.getMessage());
+			assertEquals("The following audit tables were found without a foreign key to the revision table[specified].", e.getMessage());
 		}
 	}
 }

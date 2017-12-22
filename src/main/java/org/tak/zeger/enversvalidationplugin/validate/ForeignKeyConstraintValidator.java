@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dbunit.dataset.DataSetException;
+import org.tak.zeger.enversvalidationplugin.annotation.AuditTableInformationMap;
 import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
-import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
-import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
 /**
@@ -21,42 +20,42 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 @ValidationType(TargetPhase.CONSTRAINTS)
 public class ForeignKeyConstraintValidator
 {
-	@WhiteList
-	private Map<String, AuditTableInformation> whiteList;
+	@AuditTableInformationMap
+	private Map<String, org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation> auditTableInformationMap;
 
 	@ConnectionProvider
 	private ConnectionProviderInstance connectionProvider;
 
 	/**
-	 * Validates that no table has a foreign key to the revision table except for the whitelisted audit tables.
-	 * This validator will catch cases not caught by {@link AuditTableWhiteListValidator}.
+	 * Validates that no table has a foreign key to the revision table except for the speified  audit tables.
+	 * This validator will catch cases not caught by {@link AuditTableInformationMapValidator}.
 	 */
 	@Validate
-	public void validateNoForeignKeysExistsForNonWhiteListedTables() throws SQLException, DataSetException
+	public void validateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMap() throws SQLException, DataSetException
 	{
 		final Set<String> auditTablesInDatabase = connectionProvider.getQueries().getListOfTablesWithForeignKeysToRevisionTable();
-		final Set<String> tablesWithForeignKeyButNotWhiteListed = new HashSet<>(auditTablesInDatabase);
+		final Set<String> tablesWithForeignKeyButNotInAuditTableInformationMap = new HashSet<>(auditTablesInDatabase);
 
-		tablesWithForeignKeyButNotWhiteListed.removeAll(whiteList.keySet());
-		if (!tablesWithForeignKeyButNotWhiteListed.isEmpty())
+		tablesWithForeignKeyButNotInAuditTableInformationMap.removeAll(auditTableInformationMap.keySet());
+		if (!tablesWithForeignKeyButNotInAuditTableInformationMap.isEmpty())
 		{
-			throw new ValidationException("Tables found with a reference to the revision table, which are not on the white list: " + tablesWithForeignKeyButNotWhiteListed);
+			throw new ValidationException("Tables found with a reference to the revision table, which are not on the white list: " + tablesWithForeignKeyButNotInAuditTableInformationMap);
 		}
 	}
 
 	/**
-	 * Validates that all whitelisted audit tables have a foreign key to the revision table.
+	 * Validates that all audit tables in the audit table infomration map have a foreign key to the revision table.
 	 */
 	@Validate
 	public void validateAllAuditTablesHaveAForeignKeyToRevisionTable() throws SQLException, DataSetException
 	{
 		final Set<String> auditTablesInDatabase = connectionProvider.getQueries().getListOfTablesWithForeignKeysToRevisionTable();
-		final Set<String> whiteListedAuditTablesWithoutForeignKey = new HashSet<>(whiteList.keySet());
-		whiteListedAuditTablesWithoutForeignKey.removeAll(auditTablesInDatabase);
+		final Set<String> auditTablesWithoutAForeignKey = new HashSet<>(auditTableInformationMap.keySet());
+		auditTablesWithoutAForeignKey.removeAll(auditTablesInDatabase);
 
-		if (!whiteListedAuditTablesWithoutForeignKey.isEmpty())
+		if (!auditTablesWithoutAForeignKey.isEmpty())
 		{
-			throw new ValidationException("Whitelisted audit tables found without a foreign key to the revision table" + whiteListedAuditTablesWithoutForeignKey);
+			throw new ValidationException("The following audit tables were found without a foreign key to the revision table" + auditTablesWithoutAForeignKey + ".");
 		}
 	}
 }

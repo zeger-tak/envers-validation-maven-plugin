@@ -51,10 +51,10 @@ public class PrimaryKeyValidatorTest
 	public void testGenerateTestDataWithEmptySet() throws SQLException, DataSetException
 	{
 		//Given
-		final Map<String, AuditTableInformation> whiteList = new HashMap<>();
+		final Map<String, AuditTableInformation> auditTableInformationMap = new HashMap<>();
 
 		// When
-		final List<Object[]> testData = PrimaryKeyValidator.generateTestData(connectionProvider, whiteList);
+		final List<Object[]> testData = PrimaryKeyValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertTrue(testData.isEmpty());
@@ -65,7 +65,7 @@ public class PrimaryKeyValidatorTest
 	{
 		//Given
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME);
-		final Map<String, AuditTableInformation> whiteList = Collections.singletonMap(AUDIT_TABLE_NAME, auditTableInformation);
+		final Map<String, AuditTableInformation> auditTableInformationMap = Collections.singletonMap(AUDIT_TABLE_NAME, auditTableInformation);
 
 		final List<String> pkColumnsAuditedTable = Collections.singletonList(CONTENT_TABLE_NAME);
 		when(databaseQueries.getPrimaryKeyColumnNames(CONTENT_TABLE_NAME)).thenReturn(pkColumnsAuditedTable);
@@ -74,7 +74,7 @@ public class PrimaryKeyValidatorTest
 		when(databaseQueries.getPrimaryKeyColumnNames(AUDIT_TABLE_NAME)).thenReturn(pkColumnsAuditTable);
 
 		// When
-		final List<Object[]> testData = PrimaryKeyValidator.generateTestData(connectionProvider, whiteList);
+		final List<Object[]> testData = PrimaryKeyValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		verify(connectionProvider, atLeastOnce()).getQueries();

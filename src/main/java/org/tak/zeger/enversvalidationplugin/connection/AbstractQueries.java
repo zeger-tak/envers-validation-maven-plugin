@@ -172,10 +172,10 @@ public abstract class AbstractQueries implements DatabaseQueries
 	}
 
 	@Nonnull
-	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation whitelist, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
+	private CachedResultSetTable selectAllRecordsFromTableOrderByRevAscending(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation auditTableInformationMap, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final String query = createAuditTableSelectQuery(whitelist, primaryIdentifierColumnNames);
-		return (CachedResultSetTable) databaseConnection.createQueryTable(whitelist.getAuditTableName(), query);
+		final String query = createAuditTableSelectQuery(auditTableInformationMap, primaryIdentifierColumnNames);
+		return (CachedResultSetTable) databaseConnection.createQueryTable(auditTableInformationMap.getAuditTableName(), query);
 	}
 
 	@Nonnull

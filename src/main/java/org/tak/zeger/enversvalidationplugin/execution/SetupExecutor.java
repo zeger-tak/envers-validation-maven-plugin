@@ -21,9 +21,6 @@ import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.ValidationResults;
 import org.tak.zeger.enversvalidationplugin.utils.ReflectionUtils;
 
-/**
- * This executor is responsible for filtering the whitelist so only audit tables remain which exist in the database and audit a content table which also exists in the database.
- */
 public class SetupExecutor extends AbstractExecutor
 {
 	public SetupExecutor(@Nonnull Log log, @Nonnull List<String> ignorables, @Nonnull ConnectionProviderInstance connectionProvider)
@@ -31,16 +28,16 @@ public class SetupExecutor extends AbstractExecutor
 		super(connectionProvider, log, ignorables);
 	}
 
-	public void execute(@Nonnull List<String> packagesToScanForValidators, @Nonnull Map<String, AuditTableInformation> providedWhitelist, @Nonnull ValidationResults validationResults)
+	public void execute(@Nonnull List<String> packagesToScanForValidators, @Nonnull Map<String, AuditTableInformation> providedAuditTableInformationMap, @Nonnull ValidationResults validationResults)
 	{
 		final Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ReflectionUtils.getPackages(packagesToScanForValidators)).setScanners(new SubTypesScanner(), new FieldAnnotationsScanner(), new TypeAnnotationsScanner()));
 		final Set<Class<?>> allValidators = reflections.getTypesAnnotatedWith(ValidationType.class);
 
 		final Map<TargetPhase, Set<Class<?>>> validatorsGroupedByTargetPhase = groupByTargetPhase(allValidators);
-		Map<String, AuditTableInformation> whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.SETUP, providedWhitelist, validationResults);
-		whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.TABLE_STRUCTURE, providedWhitelist, validationResults);
-		whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONSTRAINTS, providedWhitelist, validationResults);
-		whitelist = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONTENT, providedWhitelist, validationResults);
+		Map<String, AuditTableInformation> auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.SETUP, providedAuditTableInformationMap, validationResults);
+		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.TABLE_STRUCTURE, providedAuditTableInformationMap, validationResults);
+		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONSTRAINTS, providedAuditTableInformationMap, validationResults);
+		auditTableInformationMap = executeValidators(validatorsGroupedByTargetPhase, TargetPhase.CONTENT, providedAuditTableInformationMap, validationResults);
 	}
 
 	@Nonnull

@@ -9,35 +9,35 @@ import javax.annotation.Nonnull;
 
 import org.dbunit.database.CachedResultSetTable;
 import org.dbunit.dataset.DataSetException;
+import org.tak.zeger.enversvalidationplugin.annotation.AuditTableInformationMap;
 import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
 import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
-import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
-import org.tak.zeger.enversvalidationplugin.exceptions.SetupValidationForSpecificWhitelistEntryException;
+import org.tak.zeger.enversvalidationplugin.exceptions.SetupValidationForSpecificAuditTableInformationException;
 
 @ValidationType(TargetPhase.SETUP)
-public class WhitelistTablesExistValidator
+public class ConfiguredAuditTablesExistValidator
 {
-	private final AuditTableInformation auditTableInformation;
+	private final org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation auditTableInformation;
 	private ConnectionProviderInstance connectionProvider;
 
-	public WhitelistTablesExistValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditTableName, @Nonnull AuditTableInformation auditTableInformation)
+	public ConfiguredAuditTablesExistValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull String auditTableName, @Nonnull AuditTableInformation auditTableInformation)
 	{
 		this.connectionProvider = connectionProvider;
 		this.auditTableInformation = auditTableInformation;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, AuditTableInformation> whiteList)
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @AuditTableInformationMap Map<String, AuditTableInformation> auditTableInformationMap)
 	{
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, AuditTableInformation> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation> auditTableInformation : auditTableInformationMap.entrySet())
 		{
-			testData.add(new Object[] { connectionProvider, whiteListEntry.getKey(), whiteListEntry.getValue() });
+			testData.add(new Object[] { connectionProvider, auditTableInformation.getKey(), auditTableInformation.getValue() });
 		}
 
 		return testData;
@@ -56,16 +56,16 @@ public class WhitelistTablesExistValidator
 		}
 		catch (TableDoesNotExistException e)
 		{
-			throw new SetupValidationForSpecificWhitelistEntryException(auditTableInformation + " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + e.tableName + " does not exist.", auditTableInformation);
+			throw new SetupValidationForSpecificAuditTableInformationException(auditTableInformation + " is not a valid " + AuditTableInformation.class.getSimpleName() + " because the table " + e.tableName + " does not exist.", auditTableInformation);
 		}
 	}
 
-	private void determineIfTablesExist(@Nonnull AuditTableInformation auditTableInformation) throws SQLException, DataSetException
+	private void determineIfTablesExist(@Nonnull org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation auditTableInformation) throws SQLException, DataSetException
 	{
 		assertTableExists(auditTableInformation.getAuditTableName());
 		assertTableExists(auditTableInformation.getContentTableName());
 
-		final AuditTableInformation parentAuditTable = auditTableInformation.getAuditTableParent();
+		final org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation parentAuditTable = auditTableInformation.getAuditTableParent();
 		if (parentAuditTable != null)
 		{
 			determineIfTablesExist(parentAuditTable);

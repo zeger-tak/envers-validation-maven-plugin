@@ -19,19 +19,19 @@ public class ConnectionProviderInstance
 	private final String connectionUrl;
 	private final String username;
 	private final String password;
-	private final String whiteListPropertyFile;
+	private final String auditTableInformationFile;
 	private final IDatabaseTester databaseTester;
 
 	private IDatabaseConnection databaseConnection;
 	private DatabaseQueries databaseQueries;
 
-	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password, @Nonnull String whiteListPropertyFile)
+	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password, @Nonnull String auditTableInformationFile)
 	{
 		this.driverClass = driverClass;
 		this.connectionUrl = connectionUrl;
 		this.password = password;
 		this.username = username;
-		this.whiteListPropertyFile = whiteListPropertyFile;
+		this.auditTableInformationFile = auditTableInformationFile;
 		databaseTester = newDatabaseTester();
 	}
 
@@ -98,9 +98,9 @@ public class ConnectionProviderInstance
 	}
 
 	@Nonnull
-	public String getWhiteListPropertyFile()
+	public String getAuditTableInformationFile()
 	{
-		return whiteListPropertyFile;
+		return auditTableInformationFile;
 	}
 
 	@Override

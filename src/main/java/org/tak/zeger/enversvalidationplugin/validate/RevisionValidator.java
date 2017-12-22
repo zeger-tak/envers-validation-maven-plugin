@@ -12,15 +12,14 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.dbunit.dataset.DataSetException;
+import org.tak.zeger.enversvalidationplugin.annotation.AuditTableInformationMap;
 import org.tak.zeger.enversvalidationplugin.annotation.ConnectionProvider;
 import org.tak.zeger.enversvalidationplugin.annotation.Parameterized;
 import org.tak.zeger.enversvalidationplugin.annotation.TargetPhase;
 import org.tak.zeger.enversvalidationplugin.annotation.Validate;
 import org.tak.zeger.enversvalidationplugin.annotation.ValidationType;
-import org.tak.zeger.enversvalidationplugin.annotation.WhiteList;
 import org.tak.zeger.enversvalidationplugin.connection.ConnectionProviderInstance;
 import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
-import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.entities.RevisionConstants;
 import org.tak.zeger.enversvalidationplugin.entities.TableRow;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
@@ -32,11 +31,11 @@ import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 public class RevisionValidator
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final AuditTableInformation auditTableInformation;
+	private final org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation auditTableInformation;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
 	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
 
-	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
+	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation auditTableInformation, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
 	{
 		this.connectionProvider = connectionProvider;
 		this.auditTableInformation = auditTableInformation;
@@ -45,17 +44,17 @@ public class RevisionValidator
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
-	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @WhiteList Map<String, AuditTableInformation> whiteList) throws SQLException, DataSetException
+	public static List<Object[]> generateTestData(@Nonnull @ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull @AuditTableInformationMap Map<String, org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation> auditTableInformationMap) throws SQLException, DataSetException
 	{
 		final DatabaseQueries databaseQueries = connectionProvider.getQueries();
 		final List<Object[]> testData = new ArrayList<>();
-		for (Map.Entry<String, AuditTableInformation> whiteListEntry : whiteList.entrySet())
+		for (Map.Entry<String, org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation> auditTableInformation : auditTableInformationMap.entrySet())
 		{
-			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(whiteListEntry.getValue().getContentTableName());
+			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(auditTableInformation.getValue().getContentTableName());
 
-			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getContentRecords(connectionProvider.getDatabaseConnection(), whiteListEntry.getValue(), primaryIdentifierColumnNames);
-			final Map<String, List<TableRow>> auditRecordsGroupedByContentPrimaryKey = databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(connectionProvider.getDatabaseConnection(), whiteListEntry.getValue(), primaryIdentifierColumnNames);
-			testData.add(new Object[] { connectionProvider, whiteListEntry.getValue(), auditRecordsGroupedByContentPrimaryKey, recordsInAuditedTableById });
+			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getContentRecords(connectionProvider.getDatabaseConnection(), auditTableInformation.getValue(), primaryIdentifierColumnNames);
+			final Map<String, List<TableRow>> auditRecordsGroupedByContentPrimaryKey = databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(connectionProvider.getDatabaseConnection(), auditTableInformation.getValue(), primaryIdentifierColumnNames);
+			testData.add(new Object[] { connectionProvider, auditTableInformation.getValue(), auditRecordsGroupedByContentPrimaryKey, recordsInAuditedTableById });
 		}
 
 		return testData;

@@ -60,13 +60,13 @@ public class EnversValidationMojo extends AbstractMojo
 	public void execute() throws MojoFailureException
 	{
 		final ConnectionProviderInstance connectionProvider = PropertyUtils.getConnectionProperties(connectionPropertyFile);
-		final Map<String, AuditTableInformation> whiteList = PropertyUtils.getWhiteList(connectionProvider.getWhiteListPropertyFile(), connectionProvider.getQueries().getAuditTablePostFix());
+		final Map<String, AuditTableInformation> auditTableInformationMap = PropertyUtils.getAuditTableInformationMap(connectionProvider.getAuditTableInformationFile(), connectionProvider.getQueries().getAuditTablePostFix());
 
 		final ValidationResults validationResults = new ValidationResults();
 		packageToScanForValidators.add(PACKAGE_TO_ALWAYS_SCAN_FOR_EXECUTORS);
 		try
 		{
-			new SetupExecutor(getLog(), ignorables, connectionProvider).execute(packageToScanForValidators, whiteList, validationResults);
+			new SetupExecutor(getLog(), ignorables, connectionProvider).execute(packageToScanForValidators, auditTableInformationMap, validationResults);
 		}
 		catch (RuntimeException e)
 		{

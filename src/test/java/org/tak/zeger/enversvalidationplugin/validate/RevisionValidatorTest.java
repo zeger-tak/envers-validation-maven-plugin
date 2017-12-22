@@ -45,7 +45,7 @@ public class RevisionValidatorTest
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@Mock
-	private Map<String, AuditTableInformation> whiteList;
+	private Map<String, AuditTableInformation> auditTableInformationMap;
 
 	@Mock
 	private ConnectionProviderInstance connectionProvider;
@@ -64,13 +64,13 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testGenerateTestDataWithEmptyWhiteList() throws SQLException, DataSetException
+	public void testGenerateTestDataWithEmptyAuditTableInformationMap() throws SQLException, DataSetException
 	{
 		// Given
-		when(whiteList.entrySet()).thenReturn(Collections.emptySet());
+		when(auditTableInformationMap.entrySet()).thenReturn(Collections.emptySet());
 
 		// When
-		final List<Object[]> testData = RevisionValidator.generateTestData(connectionProvider, whiteList);
+		final List<Object[]> testData = RevisionValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertTrue(testData.isEmpty());
@@ -87,13 +87,13 @@ public class RevisionValidatorTest
 		final Map<String, List<TableRow>> auditTableRecords = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
 		final Map<String, TableRow> auditedTableRecords = Collections.singletonMap(auditedTable, new TableRow());
 
-		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new AuditTableInformation(AUDIT_TABLE, auditedTable))));
+		when(auditTableInformationMap.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new AuditTableInformation(AUDIT_TABLE, auditedTable))));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(primaryIdentifierColumnNames);
 		when(databaseQueries.getContentRecords(databaseConnection, auditTableInformation, primaryIdentifierColumnNames)).thenReturn(auditedTableRecords);
 		when(databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(databaseConnection, auditTableInformation, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
 
 		// When
-		final List<Object[]> testData = RevisionValidator.generateTestData(connectionProvider, whiteList);
+		final List<Object[]> testData = RevisionValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertEquals(1, testData.size());

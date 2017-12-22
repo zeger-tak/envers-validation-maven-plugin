@@ -44,13 +44,13 @@ public final class PropertyUtils
 		final String passwordPropertyKey = "password";
 		final String driverClassPropertyKey = "driver";
 		final String connectionUrlPropertyKey = "url";
-		final String whiteListPropertyFilePropertyKey = "whiteListPropertyFile";
+		final String auditTableInformationFilePropertyKey = "auditTableInformationFile";
 
 		final String username = connectionPropertiesInFile.getProperty(usernamePropertyKey);
 		final String password = connectionPropertiesInFile.getProperty(passwordPropertyKey);
 		final String driverClass = connectionPropertiesInFile.getProperty(driverClassPropertyKey);
 		final String connectionUrl = connectionPropertiesInFile.getProperty(connectionUrlPropertyKey);
-		final String whiteListPropertyFile = connectionPropertiesInFile.getProperty(whiteListPropertyFilePropertyKey);
+		final String auditTableInformationFile = connectionPropertiesInFile.getProperty(auditTableInformationFilePropertyKey);
 
 		final List<String> propertyKeysMissing = new ArrayList<>(4);
 		if (StringUtils.isBlank(username))
@@ -69,20 +69,20 @@ public final class PropertyUtils
 		{
 			propertyKeysMissing.add(connectionUrlPropertyKey);
 		}
-		if (StringUtils.isBlank(whiteListPropertyFile))
+		if (StringUtils.isBlank(auditTableInformationFile))
 		{
-			propertyKeysMissing.add(whiteListPropertyFilePropertyKey);
+			propertyKeysMissing.add(auditTableInformationFilePropertyKey);
 		}
 		if (!propertyKeysMissing.isEmpty())
 		{
 			throw new MojoFailureException("The following required connection are missing from the connection property file: " + propertyKeysMissing);
 		}
 
-		return new ConnectionProviderInstance(connectionUrl, driverClass, username, password, whiteListPropertyFile);
+		return new ConnectionProviderInstance(connectionUrl, driverClass, username, password, auditTableInformationFile);
 	}
 
 	@Nonnull
-	public static Map<String, AuditTableInformation> getWhiteList(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
+	public static Map<String, AuditTableInformation> getAuditTableInformationMap(@Nonnull String fileName, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
 		final File file = new File(fileName);
 		try
@@ -90,48 +90,48 @@ public final class PropertyUtils
 			final JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			final ConfigurationFile configurationFile = (ConfigurationFile) unmarshaller.unmarshal(file);
-			return createWhitelist(configurationFile, auditTablePostFix);
+			return createAuditTableInformationMap(configurationFile, auditTablePostFix);
 		}
 		catch (JAXBException | RuntimeException e)
 		{
-			throw new MojoFailureException("Unable to retrieve whitelist, errormessage: " + e.getMessage(), e);
+			throw new MojoFailureException("Unable to retrieve audit table information, errormessage: " + e.getMessage(), e);
 		}
 	}
 
 	@Nonnull
-	private static Map<String, AuditTableInformation> createWhitelist(ConfigurationFile whiteListEntryFile, @Nonnull String auditTablePostFix) throws MojoFailureException
+	private static Map<String, AuditTableInformation> createAuditTableInformationMap(@Nonnull ConfigurationFile auditTableInformationFile, @Nonnull String auditTablePostFix) throws MojoFailureException
 	{
-		final Map<String, AuditTableInformationType> whitelistTypes = convertToMap(whiteListEntryFile.getAuditTableInformation());
-		final Map<String, AuditTableInformation> whiteList = new HashMap<>();
+		final Map<String, AuditTableInformationType> auditTableInformationTypes = convertToMap(auditTableInformationFile.getAuditTableInformation());
+		final Map<String, AuditTableInformation> auditTableInformationMap = new HashMap<>();
 
-		for (AuditTableInformationType whitelistEntryType : whitelistTypes.values())
+		for (AuditTableInformationType auditTableInformationType : auditTableInformationTypes.values())
 		{
-			final String auditTableName = whitelistEntryType.getAuditTableName();
-			final String contentTableName = parseContentTableName(whitelistEntryType, auditTablePostFix);
-			whiteList.putIfAbsent(auditTableName, new AuditTableInformation(auditTableName, contentTableName));
-			final AuditTableInformation auditTableInformation = whiteList.get(auditTableName);
+			final String auditTableName = auditTableInformationType.getAuditTableName();
+			final String contentTableName = parseContentTableName(auditTableInformationType, auditTablePostFix);
+			auditTableInformationMap.putIfAbsent(auditTableName, new AuditTableInformation(auditTableName, contentTableName));
+			final AuditTableInformation auditTableInformation = auditTableInformationMap.get(auditTableName);
 
-			final String auditTableParentName = whitelistEntryType.getAuditTableParentName();
+			final String auditTableParentName = auditTableInformationType.getAuditTableParentName();
 			if (StringUtils.isNotBlank(auditTableParentName))
 			{
-				final AuditTableInformationType parentWhitelistEntryType = whitelistTypes.get(auditTableParentName);
-				if (parentWhitelistEntryType == null)
+				final AuditTableInformationType parentAuditTableInformationType = auditTableInformationTypes.get(auditTableParentName);
+				if (parentAuditTableInformationType == null)
 				{
-					throw new MojoFailureException("Unable to construct the whitelist tree as " + whitelistEntryType + " has a parent audit table for which no " + AuditTableInformationType.class.getSimpleName() + " was configured.");
+					throw new MojoFailureException("Unable to construct the audit table information tree as " + auditTableInformationType + " has a parent audit table for which no " + AuditTableInformationType.class.getSimpleName() + " was configured.");
 				}
 
-				whiteList.putIfAbsent(parentWhitelistEntryType.getAuditTableName(), new AuditTableInformation(parentWhitelistEntryType.getAuditTableName(), parseContentTableName(parentWhitelistEntryType, auditTablePostFix)));
-				final AuditTableInformation parentAuditTableInformation = whiteList.get(auditTableParentName);
+				auditTableInformationMap.putIfAbsent(parentAuditTableInformationType.getAuditTableName(), new AuditTableInformation(parentAuditTableInformationType.getAuditTableName(), parseContentTableName(parentAuditTableInformationType, auditTablePostFix)));
+				final AuditTableInformation parentAuditTableInformation = auditTableInformationMap.get(auditTableParentName);
 				auditTableInformation.setAuditTableParent(parentAuditTableInformation);
 			}
 		}
-		return whiteList;
+		return auditTableInformationMap;
 	}
 
 	@Nonnull
-	private static String parseContentTableName(@Nonnull AuditTableInformationType whitelistEntryType, @Nonnull String auditTablePostFix)
+	private static String parseContentTableName(@Nonnull AuditTableInformationType auditTableInformationType, @Nonnull String auditTablePostFix)
 	{
-		return StringUtils.isBlank(whitelistEntryType.getContentTableName()) ? whitelistEntryType.getAuditTableName().replaceAll(auditTablePostFix, "") : whitelistEntryType.getContentTableName();
+		return StringUtils.isBlank(auditTableInformationType.getContentTableName()) ? auditTableInformationType.getAuditTableName().replaceAll(auditTablePostFix, "") : auditTableInformationType.getContentTableName();
 	}
 
 	@Nonnull

@@ -23,16 +23,16 @@ import org.tak.zeger.enversvalidationplugin.connection.DatabaseQueries;
 import org.tak.zeger.enversvalidationplugin.entities.AuditTableInformation;
 import org.tak.zeger.enversvalidationplugin.exceptions.ValidationException;
 
-public class AuditTableWhiteListValidatorTest
+public class AuditTableAuditTableInformationValidatorTest
 {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@InjectMocks
-	private AuditTableWhiteListValidator validator;
+	private AuditTableInformationMapValidator validator;
 
 	@Mock
-	private Map<String, AuditTableInformation> whiteList;
+	private Map<String, AuditTableInformation> auditTableInformationMap;
 
 	@Mock
 	private Set<String> auditTablesInDatabase;
@@ -59,61 +59,61 @@ public class AuditTableWhiteListValidatorTest
 		when(databaseQueries.getTablesByNameEndingWith(postfix)).thenReturn(expectedTableNames);
 
 		// When
-		final List<Object[]> generateData = AuditTableWhiteListValidator.generateData(connectionProvider, whiteList);
+		final List<Object[]> generateData = AuditTableInformationMapValidator.generateData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertEquals(1, generateData.size());
-		assertEquals(whiteList, generateData.get(0)[0]);
+		assertEquals(auditTableInformationMap, generateData.get(0)[0]);
 		assertEquals(expectedTableNames, generateData.get(0)[1]);
 	}
 
 	@Test
-	public void testValidateAllExistingAuditTablesAreWhiteListedAndWhiteListedTablesThatDoNotExist()
+	public void testValidateAllExistingAuditTablesAreSpecifiedNoExistingTables()
 	{
 		// Given
 		final Set<String> existingTables = Collections.emptySet();
-		final String whiteListedTable = "whiteListed";
+		final String specifiedTable = "specified";
 
 		when(auditTablesInDatabase.stream()).thenReturn(existingTables.stream());
-		when(whiteList.keySet()).thenReturn(Collections.singleton(whiteListedTable));
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton(specifiedTable));
 
 		// When
-		validator.validateAllExistingAuditTablesAreWhiteListed();
+		validator.validateAllExistingAuditTablesAreSpecified();
 	}
 
 	@Test
-	public void testValidateAllExistingAuditTablesAreWhiteListedAndAllWhiteListedTablesExist()
+	public void testValidateAllExistingAuditTablesAreSpecifiedAndExist()
 	{
 		// Given
-		final String whiteListedTable = "whiteListed";
-		final Set<String> existingTables = Collections.singleton(whiteListedTable);
+		final String specifiedTable = "specified";
+		final Set<String> existingTables = Collections.singleton(specifiedTable);
 
 		when(auditTablesInDatabase.stream()).thenReturn(existingTables.stream());
-		when(whiteList.keySet()).thenReturn(Collections.singleton(whiteListedTable.toUpperCase()));
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton(specifiedTable.toUpperCase()));
 
 		// When
-		validator.validateAllExistingAuditTablesAreWhiteListed();
+		validator.validateAllExistingAuditTablesAreSpecified();
 	}
 
 	@Test
-	public void testValidateAllExistingAuditTablesAreWhiteListedAndSomeExistingTablesAreNotWhiteListed()
+	public void testValidateAllExistingAuditTablesAreSpecifiedWhenSomeExistingTablesAreNotSpecified()
 	{
 		// Given
-		final String whiteListedTable = "whiteListed";
-		final String tableNotOnWhiteList = "unlisted";
-		final List<String> existingTables = Arrays.asList(whiteListedTable, tableNotOnWhiteList);
+		final String specifiedTable = "specified";
+		final String existingTableNotSpecified = "not specified";
+		final List<String> existingTables = Arrays.asList(specifiedTable, existingTableNotSpecified);
 
 		when(auditTablesInDatabase.stream()).thenReturn(existingTables.stream());
-		when(whiteList.keySet()).thenReturn(Collections.singleton(whiteListedTable.toUpperCase()));
+		when(auditTableInformationMap.keySet()).thenReturn(Collections.singleton(specifiedTable.toUpperCase()));
 
 		try
 		{
 			// When
-			validator.validateAllExistingAuditTablesAreWhiteListed();
+			validator.validateAllExistingAuditTablesAreSpecified();
 		}
 		catch (ValidationException e)
 		{
-			assertEquals("The following audit tables are not whitelisted: [UNLISTED]", e.getMessage());
+			assertEquals("The following audit tables are not configured in the audit table information map: [NOT SPECIFIED]", e.getMessage());
 		}
 	}
 }

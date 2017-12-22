@@ -66,6 +66,6 @@ public class AuditTableInformation
 	@Override
 	public String toString()
 	{
-		return "WhitelistEntry[auditTableName='" + auditTableName + (auditTableParent == null ? "" : "', auditTableParent='" + auditTableParent) + "', contentTableName='" + contentTableName + "']";
+		return "AuditTableInformation[auditTableName='" + auditTableName + (auditTableParent == null ? "" : "', auditTableParent='" + auditTableParent) + "', contentTableName='" + contentTableName + "']";
 	}
 }

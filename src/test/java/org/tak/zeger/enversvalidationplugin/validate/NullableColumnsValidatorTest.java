@@ -30,7 +30,7 @@ public class NullableColumnsValidatorTest
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
 
 	@Mock
-	private Map<String, AuditTableInformation> whiteList;
+	private Map<String, AuditTableInformation> auditTableInformationMap;
 
 	@Mock
 	private ConnectionProviderInstance connectionProvider;
@@ -45,13 +45,13 @@ public class NullableColumnsValidatorTest
 	}
 
 	@Test
-	public void testGenerateTestDataWithEmptyWhiteList() throws SQLException, DataSetException
+	public void testGenerateTestDataWithEmptyAuditTableInformationMap() throws SQLException, DataSetException
 	{
 		// Given
-		when(whiteList.entrySet()).thenReturn(Collections.emptySet());
+		when(auditTableInformationMap.entrySet()).thenReturn(Collections.emptySet());
 
 		// When
-		final List<Object[]> testData = NullableColumnsValidator.generateTestData(connectionProvider, whiteList);
+		final List<Object[]> testData = NullableColumnsValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertTrue(testData.isEmpty());
@@ -68,12 +68,12 @@ public class NullableColumnsValidatorTest
 		final List<String> pkColumnNamesAuditedTable = Collections.singletonList(auditTable);
 		final Set<String> nonNullColumns = Collections.singleton(auditTable);
 
-		when(whiteList.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditTable, auditTableInformation)));
+		when(auditTableInformationMap.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditTable, auditTableInformation)));
 		when(databaseQueries.getPrimaryKeyColumnNames(auditTable)).thenReturn(pkColumnNamesAuditedTable);
 		when(databaseQueries.getAllNonnullColumns(auditTable)).thenReturn(nonNullColumns);
 
 		// When
-		final List<Object[]> testData = NullableColumnsValidator.generateTestData(connectionProvider, whiteList);
+		final List<Object[]> testData = NullableColumnsValidator.generateTestData(connectionProvider, auditTableInformationMap);
 
 		// Then
 		assertEquals(1, testData.size());
