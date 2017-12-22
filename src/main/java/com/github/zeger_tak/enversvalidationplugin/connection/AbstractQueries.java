@@ -56,19 +56,19 @@ public abstract class AbstractQueries implements DatabaseQueries
 	@Override
 	public Map<String, TableRow> getContentRecords(@Nonnull IDatabaseConnection databaseConnection, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNames) throws SQLException, DataSetException
 	{
-		final CachedResultSetTable recordsInAuditedTable = selectAllRecordsFromTable(databaseConnection, auditTableInformation, primaryIdentifierColumnNames);
-		final List<String> columnNames = getColumnNames(recordsInAuditedTable);
+		final CachedResultSetTable recordsInContentTable = selectAllRecordsFromTable(databaseConnection, auditTableInformation, primaryIdentifierColumnNames);
+		final List<String> columnNames = getColumnNames(recordsInContentTable);
 
 		final Map<String, TableRow> recordsInTableById = new HashMap<>();
-		for (int rowIndex = 0; rowIndex < recordsInAuditedTable.getRowCount(); rowIndex++)
+		for (int rowIndex = 0; rowIndex < recordsInContentTable.getRowCount(); rowIndex++)
 		{
 			final TableRow tableRow = new TableRow();
 			for (String columnName : columnNames)
 			{
-				tableRow.addColumn(columnName, recordsInAuditedTable.getValue(rowIndex, columnName));
+				tableRow.addColumn(columnName, recordsInContentTable.getValue(rowIndex, columnName));
 			}
 
-			final String identifier = getPrimaryIdentifierAsString(recordsInAuditedTable, rowIndex, primaryIdentifierColumnNames);
+			final String identifier = getPrimaryIdentifierAsString(recordsInContentTable, rowIndex, primaryIdentifierColumnNames);
 			recordsInTableById.put(identifier, tableRow);
 		}
 
@@ -238,12 +238,12 @@ public abstract class AbstractQueries implements DatabaseQueries
 
 	@Nonnull
 	@Override
-	public String getPrimaryIdentifierAsString(@Nonnull CachedResultSetTable recordsInAuditedTable, int rowIndex, @Nonnull List<String> primaryIdentifierColumnNames) throws DataSetException
+	public String getPrimaryIdentifierAsString(@Nonnull CachedResultSetTable recordsInContentTable, int rowIndex, @Nonnull List<String> primaryIdentifierColumnNames) throws DataSetException
 	{
 		List<String> primaryIdentifierValue = new ArrayList<>(primaryIdentifierColumnNames.size());
 		for (String primaryIdentifierColumnName : primaryIdentifierColumnNames)
 		{
-			final Object identifierValue = recordsInAuditedTable.getValue(rowIndex, StringUtils.upperCase(primaryIdentifierColumnName));
+			final Object identifierValue = recordsInContentTable.getValue(rowIndex, StringUtils.upperCase(primaryIdentifierColumnName));
 			if (identifierValue == null)
 			{
 				primaryIdentifierValue.add(null);

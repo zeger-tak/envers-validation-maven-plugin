@@ -62,14 +62,14 @@ public class NullableColumnsValidatorTest
 	{
 		// Given
 		final String auditTable = "auditTable";
-		final String auditedTable = "auditedTable";
-		final AuditTableInformation auditTableInformation = new AuditTableInformation(auditTable, auditedTable);
+		final String contentTable = "contentTable";
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(auditTable, contentTable);
 
-		final List<String> pkColumnNamesAuditedTable = Collections.singletonList(auditTable);
+		final List<String> pkColumnNamesContentTable = Collections.singletonList(auditTable);
 		final Set<String> nonNullColumns = Collections.singleton(auditTable);
 
 		when(auditTableInformationMap.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(auditTable, auditTableInformation)));
-		when(databaseQueries.getPrimaryKeyColumnNames(auditTable)).thenReturn(pkColumnNamesAuditedTable);
+		when(databaseQueries.getPrimaryKeyColumnNames(auditTable)).thenReturn(pkColumnNamesContentTable);
 		when(databaseQueries.getAllNonnullColumns(auditTable)).thenReturn(nonNullColumns);
 
 		// When
@@ -79,7 +79,7 @@ public class NullableColumnsValidatorTest
 		assertEquals(1, testData.size());
 		assertEquals(connectionProvider, testData.get(0)[0]);
 		assertEquals(auditTableInformation, testData.get(0)[1]);
-		assertEquals(pkColumnNamesAuditedTable, testData.get(0)[2]);
+		assertEquals(pkColumnNamesContentTable, testData.get(0)[2]);
 		assertEquals(nonNullColumns, testData.get(0)[3]);
 	}
 

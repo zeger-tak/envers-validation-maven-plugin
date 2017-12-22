@@ -30,14 +30,14 @@ public class PrimaryKeyValidator
 	private final ConnectionProviderInstance connectionProvider;
 	private final AuditTableInformation auditTableInformation;
 	private final List<String> primaryIdentifierColumnNamesAuditTable;
-	private final List<String> primaryIdentifierColumnNamesAuditedTable;
+	private final List<String> primaryIdentifierColumnNamesContentTable;
 
-	public PrimaryKeyValidator(@ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNamesAuditTable, @Nonnull List<String> primaryIdentifierColumnNamesAuditedTable)
+	public PrimaryKeyValidator(@ConnectionProvider ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> primaryIdentifierColumnNamesAuditTable, @Nonnull List<String> primaryIdentifierColumnNamesContentTable)
 	{
 		this.connectionProvider = connectionProvider;
 		this.auditTableInformation = auditTableInformation;
 		this.primaryIdentifierColumnNamesAuditTable = primaryIdentifierColumnNamesAuditTable;
-		this.primaryIdentifierColumnNamesAuditedTable = primaryIdentifierColumnNamesAuditedTable;
+		this.primaryIdentifierColumnNamesContentTable = primaryIdentifierColumnNamesContentTable;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
@@ -49,9 +49,9 @@ public class PrimaryKeyValidator
 		for (Map.Entry<String, AuditTableInformation> auditTableInformation : auditTableInformationMap.entrySet())
 		{
 			final List<String> primaryIdentifierColumnNamesAuditTable = databaseQueries.getPrimaryKeyColumnNames(auditTableInformation.getKey());
-			final List<String> primaryIdentifierColumnNamesAuditedTable = databaseQueries.getPrimaryKeyColumnNames(auditTableInformation.getValue().getContentTableName());
+			final List<String> primaryIdentifierColumnNameContentTable = databaseQueries.getPrimaryKeyColumnNames(auditTableInformation.getValue().getContentTableName());
 
-			testData.add(new Object[] { connectionProvider, auditTableInformation.getValue(), primaryIdentifierColumnNamesAuditTable, primaryIdentifierColumnNamesAuditedTable, });
+			testData.add(new Object[] { connectionProvider, auditTableInformation.getValue(), primaryIdentifierColumnNamesAuditTable, primaryIdentifierColumnNameContentTable, });
 		}
 
 		return testData;
@@ -72,7 +72,7 @@ public class PrimaryKeyValidator
 			throw new ValidationException("Audit table " + auditTableInformation.getAuditTableName() + " has no primary key.");
 		}
 
-		final Set<String> expectedAuditTablePrimaryKeyColumnNames = new HashSet<>(primaryIdentifierColumnNamesAuditedTable);
+		final Set<String> expectedAuditTablePrimaryKeyColumnNames = new HashSet<>(primaryIdentifierColumnNamesContentTable);
 		final String revisionTableIdentifierColumnName = connectionProvider.getQueries().getRevisionTableIdentifierColumnName();
 		expectedAuditTablePrimaryKeyColumnNames.add(revisionTableIdentifierColumnName);
 
@@ -91,7 +91,7 @@ public class PrimaryKeyValidator
 
 		final Set<String> actualPrimaryKeyColumnsAuditTable = new HashSet<>(primaryIdentifierColumnNamesAuditTable);
 		actualPrimaryKeyColumnsAuditTable.remove(revisionTableIdentifierColumnName);
-		actualPrimaryKeyColumnsAuditTable.removeAll(primaryIdentifierColumnNamesAuditedTable);
+		actualPrimaryKeyColumnsAuditTable.removeAll(primaryIdentifierColumnNamesContentTable);
 
 		if (!actualPrimaryKeyColumnsAuditTable.isEmpty())
 		{

@@ -49,5 +49,5 @@ public interface DatabaseQueries
 	Set<String> getAllNonnullColumns(@Nonnull String tableName) throws SQLException, DataSetException;
 
 	@Nonnull
-	String getPrimaryIdentifierAsString(@Nonnull CachedResultSetTable recordsInAuditedTable, int rowIndex, @Nonnull List<String> primaryIdentifierColumnNames) throws DataSetException;
+	String getPrimaryIdentifierAsString(@Nonnull CachedResultSetTable recordsInContentTable, int rowIndex, @Nonnull List<String> primaryIdentifierColumnNames) throws DataSetException;
 }

@@ -80,16 +80,16 @@ public class RevisionValidatorTest
 	public void testGenerateTestData() throws SQLException, DataSetException
 	{
 		// Given
-		final String auditedTable = "";
-		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, auditedTable);
+		final String contentTable = "";
+		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, contentTable);
 		final List<String> primaryIdentifierColumnNames = Collections.singletonList(AUDIT_TABLE);
 
 		final Map<String, List<TableRow>> auditTableRecords = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
-		final Map<String, TableRow> auditedTableRecords = Collections.singletonMap(auditedTable, new TableRow());
+		final Map<String, TableRow> contentTableRecords = Collections.singletonMap(contentTable, new TableRow());
 
-		when(auditTableInformationMap.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new AuditTableInformation(AUDIT_TABLE, auditedTable))));
-		when(databaseQueries.getPrimaryKeyColumnNames(auditedTable)).thenReturn(primaryIdentifierColumnNames);
-		when(databaseQueries.getContentRecords(databaseConnection, auditTableInformation, primaryIdentifierColumnNames)).thenReturn(auditedTableRecords);
+		when(auditTableInformationMap.entrySet()).thenReturn(Collections.singleton(new HashMap.SimpleEntry<>(AUDIT_TABLE, new AuditTableInformation(AUDIT_TABLE, contentTable))));
+		when(databaseQueries.getPrimaryKeyColumnNames(contentTable)).thenReturn(primaryIdentifierColumnNames);
+		when(databaseQueries.getContentRecords(databaseConnection, auditTableInformation, primaryIdentifierColumnNames)).thenReturn(contentTableRecords);
 		when(databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(databaseConnection, auditTableInformation, primaryIdentifierColumnNames)).thenReturn(auditTableRecords);
 
 		// When
@@ -98,39 +98,39 @@ public class RevisionValidatorTest
 		// Then
 		assertEquals(1, testData.size());
 		assertEquals(connectionProvider, testData.get(0)[0]);
-		assertEquals(auditedTable, ((AuditTableInformation) testData.get(0)[1]).getContentTableName());
+		assertEquals(contentTable, ((AuditTableInformation) testData.get(0)[1]).getContentTableName());
 		assertEquals(auditTableRecords, testData.get(0)[2]);
-		assertEquals(auditedTableRecords, testData.get(0)[3]);
+		assertEquals(contentTableRecords, testData.get(0)[3]);
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionWithEmptyAuditedList()
+	public void testValidateAllRecordsInContentTableHaveAValidLatestRevisionWithEmptyContentList()
 	{
 		// Given
-		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final Map<String, TableRow> recordsInContentTable = Collections.emptyMap();
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(new TableRow()));
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable);
+		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable);
 
 		// When
-		validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+		validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionWithEmptyAuditTable()
+	public void testValidateAllRecordsInContentTableHaveAValidLatestRevisionWithEmptyAuditTable()
 	{
 		// Given
-		final Map<String, TableRow> recordsInAuditedTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
+		final Map<String, TableRow> recordsInContentTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable);
+		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable);
 
 		try
 		{
 			// When
-			validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+			validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 			fail("Expected " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
@@ -140,24 +140,24 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionAuditTableWithoutRevColumn()
+	public void testValidateAllRecordsInContentTableHaveAValidLatestRevisionAuditTableWithoutRevColumn()
 	{
 		// Given
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 		final String revColumnName = "revColumnName";
 		final TableRow auditTableRow = mock(TableRow.class);
-		final Map<String, TableRow> recordsInAuditedTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
+		final Map<String, TableRow> recordsInContentTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(auditTableRow));
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(null);
 
-		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable);
+		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable);
 
 		try
 		{
 			// When
-			validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+			validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 			fail("Expected a " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
@@ -167,24 +167,24 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionAuditTableWithRemoveRevision()
+	public void testValidateAllRecordsInContentTableHaveAValidLatestRevisionAuditTableWithRemoveRevision()
 	{
 		// Given
 		final String revColumnName = "revColumnName";
 		final TableRow auditTableRow = mock(TableRow.class);
-		final Map<String, TableRow> recordsInAuditedTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
+		final Map<String, TableRow> recordsInContentTable = Collections.singletonMap(AUDIT_TABLE, new TableRow());
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(auditTableRow));
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(BigDecimal.valueOf(RevisionConstants.REMOVE_REVISION));
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		try
 		{
 			// When
-			validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+			validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 			fail("Expected a " + ValidationException.class.getSimpleName());
 		}
 		catch (ValidationException e)
@@ -195,40 +195,40 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionAuditTableWithValidAddRevision()
+	public void testValidateAllRecordsInContentTableHaveAValidLatestRevisionAuditTableWithValidAddRevision()
 	{
 		// Given
 		final String revColumnName = "revColumnName";
 		final TableRow actualRecord = mock(TableRow.class);
 		final TableRow auditTableRow = mock(TableRow.class);
-		final Map<String, TableRow> recordsInAuditedTable = Collections.singletonMap(AUDIT_TABLE, actualRecord);
+		final Map<String, TableRow> recordsInContentTable = Collections.singletonMap(AUDIT_TABLE, actualRecord);
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(auditTableRow));
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(BigDecimal.valueOf(RevisionConstants.ADD_REVISION));
 		doReturn(Collections.emptyMap()).when(validator).determineIncorrectColumns(actualRecord, auditTableRow);
 
 		// When
-		validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+		validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 	}
 
 	@Test
-	public void testValidateAllRecordsInAuditedTableHaveAValidLatestRevisionAuditTableWithInvalidModifyRevision()
+	public void testValidateAllRecordsInContentTableHaveAValidLatestRevisionAuditTableWithInvalidModifyRevision()
 	{
 		// Given
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 		final String revColumnName = "revColumnName";
 		final TableRow actualRecord = mock(TableRow.class);
 		final TableRow auditTableRow = mock(TableRow.class);
-		final Map<String, TableRow> recordsInAuditedTable = Collections.singletonMap(AUDIT_TABLE, actualRecord);
+		final Map<String, TableRow> recordsInContentTable = Collections.singletonMap(AUDIT_TABLE, actualRecord);
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.singletonMap(AUDIT_TABLE, Collections.singletonList(auditTableRow));
 
 		final Map<String, TableRow> incorrectColumns = mock(Map.class);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		when(databaseQueries.getRevTypeColumnName()).thenReturn(revColumnName);
 		when(auditTableRow.getColumnValue(revColumnName)).thenReturn(BigDecimal.valueOf(RevisionConstants.ADD_REVISION));
@@ -237,7 +237,7 @@ public class RevisionValidatorTest
 		doNothing().when(validator).validateLatestRevisionComparisonResult(any(), any());
 
 		// When
-		validator.validateAllRecordsInAuditedTableHaveAValidLatestRevision();
+		validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 
 		// Then
 		final ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
@@ -257,11 +257,11 @@ public class RevisionValidatorTest
 		auditTableRow.addColumn("column1", "Should not cause any problems.");
 
 		// Method under test is not dependent on the constructor parameters
-		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final Map<String, TableRow> recordsInContentTable = Collections.emptyMap();
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -271,7 +271,7 @@ public class RevisionValidatorTest
 	}
 
 	@Test
-	public void testDetermineIncorrectColumnsWithAuditedTableHavingMoreColumns()
+	public void testDetermineIncorrectColumnsWithContentTableHavingMoreColumns()
 	{
 		// Given
 		final TableRow actualTableRow = new TableRow();
@@ -279,11 +279,11 @@ public class RevisionValidatorTest
 		final TableRow auditTableRow = new TableRow();
 
 		// Method under test is not dependent on the constructor parameters
-		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final Map<String, TableRow> recordsInContentTable = Collections.emptyMap();
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -291,14 +291,14 @@ public class RevisionValidatorTest
 		// Then
 		assertEquals(2, incorrectColumns.size());
 		final TableRow actualColumn = incorrectColumns.get("actual");
-		final TableRow auditedColumn = incorrectColumns.get("audited");
+		final TableRow ContentColumn = incorrectColumns.get("audit");
 
 		assertEquals("Should trigger a difference.", actualColumn.getColumnValue("column1"));
-		assertNull(auditedColumn.getColumnValue("column1"));
+		assertNull(ContentColumn.getColumnValue("column1"));
 	}
 
 	@Test
-	public void testDetermineIncorrectColumnsWithAuditedTableHavingSameColumnsButWithDifferentValue()
+	public void testDetermineIncorrectColumnsWithContentTableHavingSameColumnsButWithDifferentValue()
 	{
 		// Given
 		final TableRow actualTableRow = new TableRow();
@@ -309,11 +309,11 @@ public class RevisionValidatorTest
 		auditTableRow.addColumn("column2", null);
 
 		// Method under test is not dependent on the constructor parameters
-		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final Map<String, TableRow> recordsInContentTable = Collections.emptyMap();
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -321,12 +321,12 @@ public class RevisionValidatorTest
 		// Then
 		assertEquals(2, incorrectColumns.size());
 		final TableRow actualColumn = incorrectColumns.get("actual");
-		final TableRow auditedColumn = incorrectColumns.get("audited");
+		final TableRow ContentColumn = incorrectColumns.get("audit");
 
 		assertEquals("value11", actualColumn.getColumnValue("column1"));
-		assertEquals("value21", auditedColumn.getColumnValue("column1"));
+		assertEquals("value21", ContentColumn.getColumnValue("column1"));
 		assertEquals("value12", actualColumn.getColumnValue("column2"));
-		assertNull(auditedColumn.getColumnValue("column2"));
+		assertNull(ContentColumn.getColumnValue("column2"));
 	}
 
 	@Test
@@ -339,11 +339,11 @@ public class RevisionValidatorTest
 		auditTableRow.addColumn("column2", "value");
 
 		// Method under test is not dependent on the constructor parameters
-		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
+		final Map<String, TableRow> recordsInContentTable = Collections.emptyMap();
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInAuditedTable));
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable));
 
 		// When
 		final Map<String, TableRow> incorrectColumns = validator.determineIncorrectColumns(actualTableRow, auditTableRow);
@@ -351,13 +351,13 @@ public class RevisionValidatorTest
 		// Then
 		assertEquals(2, incorrectColumns.size());
 		final TableRow actualColumn = incorrectColumns.get("actual");
-		final TableRow auditedColumn = incorrectColumns.get("audited");
+		final TableRow ContentColumn = incorrectColumns.get("audit");
 
 		assertEquals("value", actualColumn.getColumnValue("column1"));
-		assertNull(auditedColumn.getColumnValue("column1"));
+		assertNull(ContentColumn.getColumnValue("column1"));
 		assertNull(actualColumn.getColumnValue("column2"));
-		// Comparator will only provide difference check for columns present in the table to audit, and wont compare columns only present in the audit table.
-		assertNull(auditedColumn.getColumnValue("column2"));
+		// Comparator will only provide difference check for columns present in the content table, and wont compare columns only present in the audit table.
+		assertNull(ContentColumn.getColumnValue("column2"));
 	}
 
 	@Test
@@ -409,7 +409,7 @@ public class RevisionValidatorTest
 
 		final Map<String, TableRow> differentColumns = new HashMap<>();
 		differentColumns.put("actual", actualTableRow);
-		differentColumns.put("audited", auditTableRow);
+		differentColumns.put("audit", auditTableRow);
 		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = Collections.singletonMap("identifierWithDifferentAudit", differentColumns);
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
@@ -426,8 +426,8 @@ public class RevisionValidatorTest
 			assertEquals(
 					//@formatter:off
 				"The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.\n" +
-						"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the table to audit, the following columns differ: \n" +
-						"\tActual value for column column: actualValue, audited value: auditValue.\n", e.getMessage());
+						"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the content table, the following columns differ: \n" +
+						"\tActual value for column column: actualValue, audit value: auditValue.\n", e.getMessage());
 			//@formatter:on
 		}
 	}
@@ -445,7 +445,7 @@ public class RevisionValidatorTest
 
 		final Map<String, TableRow> differentColumns = new HashMap<>();
 		differentColumns.put("actual", actualTableRow);
-		differentColumns.put("audited", auditTableRow);
+		differentColumns.put("audit", auditTableRow);
 		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = Collections.singletonMap("identifierWithDifferentAudit", differentColumns);
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE);
 
@@ -461,8 +461,8 @@ public class RevisionValidatorTest
 		{
 			assertEquals(
 					//@formatter:off
-				"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the table to audit, the following columns differ: \n" +
-						"\tActual value for column column: actualValue, audited value: auditValue.\n", e.getMessage());
+				"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the content table, the following columns differ: \n" +
+						"\tActual value for column column: actualValue, audit value: auditValue.\n", e.getMessage());
 			//@formatter:on
 		}
 	}
@@ -472,8 +472,8 @@ public class RevisionValidatorTest
 	{
 		// Given
 		final Map<String, List<TableRow>> recordsInAuditTable = Collections.emptyMap();
-		final Map<String, TableRow> recordsInAuditedTable = Collections.emptyMap();
-		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE), recordsInAuditTable, recordsInAuditedTable));
+		final Map<String, TableRow> recordsInContentTable = Collections.emptyMap();
+		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE, AUDIT_TABLE), recordsInAuditTable, recordsInContentTable));
 
 		// When
 		validator.validateHistoryIsAValidFlow();

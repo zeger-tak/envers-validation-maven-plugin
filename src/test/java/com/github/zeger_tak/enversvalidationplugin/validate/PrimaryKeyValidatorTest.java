@@ -67,8 +67,8 @@ public class PrimaryKeyValidatorTest
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME);
 		final Map<String, AuditTableInformation> auditTableInformationMap = Collections.singletonMap(AUDIT_TABLE_NAME, auditTableInformation);
 
-		final List<String> pkColumnsAuditedTable = Collections.singletonList(CONTENT_TABLE_NAME);
-		when(databaseQueries.getPrimaryKeyColumnNames(CONTENT_TABLE_NAME)).thenReturn(pkColumnsAuditedTable);
+		final List<String> pkColumnsContentTable = Collections.singletonList(CONTENT_TABLE_NAME);
+		when(databaseQueries.getPrimaryKeyColumnNames(CONTENT_TABLE_NAME)).thenReturn(pkColumnsContentTable);
 
 		final List<String> pkColumnsAuditTable = Arrays.asList(CONTENT_TABLE_NAME, AUDIT_TABLE_NAME);
 		when(databaseQueries.getPrimaryKeyColumnNames(AUDIT_TABLE_NAME)).thenReturn(pkColumnsAuditTable);
@@ -82,7 +82,7 @@ public class PrimaryKeyValidatorTest
 		final Object[] testRow = testData.get(0);
 		assertEquals(auditTableInformation, testRow[1]);
 		assertEquals(pkColumnsAuditTable, testRow[2]);
-		assertEquals(pkColumnsAuditedTable, testRow[3]);
+		assertEquals(pkColumnsContentTable, testRow[3]);
 	}
 
 	@Test
@@ -105,7 +105,7 @@ public class PrimaryKeyValidatorTest
 	}
 
 	@Test
-	public void testValidateAuditTableHasAValidPrimaryKeyWithPKColumnsOnAuditedTableButNoPKColumnsOnAuditTable()
+	public void testValidateAuditTableHasAValidPrimaryKeyWithPKColumnsOnContentTableButNoPKColumnsOnAuditTable()
 	{
 		// Given
 		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME), Collections.emptyList());
@@ -125,7 +125,7 @@ public class PrimaryKeyValidatorTest
 	}
 
 	@Test
-	public void testValidateAuditTableHasAValidPrimaryKeyWithPKColumnsOnAuditedTableButMorePKColumnsOnAuditTable()
+	public void testValidateAuditTableHasAValidPrimaryKeyWithPKColumnsOnContentTableButMorePKColumnsOnAuditTable()
 	{
 		// Given
 		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Arrays.asList("unexpected", REVISION_COLUMN_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME));

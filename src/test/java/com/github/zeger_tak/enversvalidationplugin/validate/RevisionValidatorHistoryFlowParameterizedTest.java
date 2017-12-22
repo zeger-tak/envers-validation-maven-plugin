@@ -37,10 +37,10 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 	private final String expectedExceptionMessageValidFlow;
 	private final String expectedExceptionMessageAddOrModifyContent;
 
-	public RevisionValidatorHistoryFlowParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
+	public RevisionValidatorHistoryFlowParameterizedTest(@Nonnull String testName, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInContentTable, @Nullable String expectedExceptionMessageValidFlow, @Nullable String expectedExceptionMessageAddOrModifyContent)
 	{
 		connectionProvider = mock(ConnectionProviderInstance.class);
-		validator = new RevisionValidator(connectionProvider, new AuditTableInformation("auditTableName", "auditTableName"), recordsInAuditTable, recordsInAuditedTable);
+		validator = new RevisionValidator(connectionProvider, new AuditTableInformation("auditTableName", "auditTableName"), recordsInAuditTable, recordsInContentTable);
 		this.expectedExceptionMessageValidFlow = expectedExceptionMessageValidFlow;
 		this.expectedExceptionMessageAddOrModifyContent = expectedExceptionMessageAddOrModifyContent;
 	}

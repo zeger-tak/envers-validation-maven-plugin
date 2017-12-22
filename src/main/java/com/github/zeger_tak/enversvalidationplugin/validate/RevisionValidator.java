@@ -34,14 +34,14 @@ public class RevisionValidator
 	private final ConnectionProviderInstance connectionProvider;
 	private final AuditTableInformation auditTableInformation;
 	private final Map<String, List<TableRow>> recordsInAuditTable;
-	private final Map<String, TableRow> recordsInAuditedTableIdentifiedByPK;
+	private final Map<String, TableRow> recordsInContentTableIdentifiedByPK;
 
-	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInAuditedTableIdentifiedByPK)
+	public RevisionValidator(@Nonnull ConnectionProviderInstance connectionProvider, @Nonnull AuditTableInformation auditTableInformation, @Nonnull Map<String, List<TableRow>> recordsInAuditTable, @Nonnull Map<String, TableRow> recordsInContentTableIdentifiedByPK)
 	{
 		this.connectionProvider = connectionProvider;
 		this.auditTableInformation = auditTableInformation;
 		this.recordsInAuditTable = recordsInAuditTable;
-		this.recordsInAuditedTableIdentifiedByPK = recordsInAuditedTableIdentifiedByPK;
+		this.recordsInContentTableIdentifiedByPK = recordsInContentTableIdentifiedByPK;
 	}
 
 	@Parameterized(name = "{index}: auditTableName: {1}", uniqueIdentifier = "{1}")
@@ -53,9 +53,9 @@ public class RevisionValidator
 		{
 			final List<String> primaryIdentifierColumnNames = databaseQueries.getPrimaryKeyColumnNames(auditTableInformation.getValue().getContentTableName());
 
-			final Map<String, TableRow> recordsInAuditedTableById = databaseQueries.getContentRecords(connectionProvider.getDatabaseConnection(), auditTableInformation.getValue(), primaryIdentifierColumnNames);
+			final Map<String, TableRow> recordsInContentTableById = databaseQueries.getContentRecords(connectionProvider.getDatabaseConnection(), auditTableInformation.getValue(), primaryIdentifierColumnNames);
 			final Map<String, List<TableRow>> auditRecordsGroupedByContentPrimaryKey = databaseQueries.getAuditRecordsGroupedByContentPrimaryKey(connectionProvider.getDatabaseConnection(), auditTableInformation.getValue(), primaryIdentifierColumnNames);
-			testData.add(new Object[] { connectionProvider, auditTableInformation.getValue(), auditRecordsGroupedByContentPrimaryKey, recordsInAuditedTableById });
+			testData.add(new Object[] { connectionProvider, auditTableInformation.getValue(), auditRecordsGroupedByContentPrimaryKey, recordsInContentTableById });
 		}
 
 		return testData;
@@ -140,7 +140,7 @@ public class RevisionValidator
 				continue;
 			}
 
-			final TableRow contentTableRow = recordsInAuditedTableIdentifiedByPK.get(auditHistoryPerIdentifier.getKey());
+			final TableRow contentTableRow = recordsInContentTableIdentifiedByPK.get(auditHistoryPerIdentifier.getKey());
 			if (contentTableRow == null)
 			{
 				recordsWithAnAddOrModifyLatestRevisionButNoExistingContent.add(auditHistoryPerIdentifier.getKey());
@@ -161,13 +161,13 @@ public class RevisionValidator
 	 * - The content table may not have columns which are not present in the audit table.
 	 */
 	@Validate
-	public void validateAllRecordsInAuditedTableHaveAValidLatestRevision()
+	public void validateAllRecordsInContentTableHaveAValidLatestRevision()
 	{
-		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = new ArrayList<>(recordsInAuditedTableIdentifiedByPK.size());
+		final List<String> identifiersWhichShouldHaveAnAddOrModifyRevision = new ArrayList<>(recordsInContentTableIdentifiedByPK.size());
 		final Map<String, Map<String, TableRow>> rowsWithDifferentValues = new HashMap<>();
-		for (Map.Entry<String, TableRow> auditedRow : recordsInAuditedTableIdentifiedByPK.entrySet())
+		for (Map.Entry<String, TableRow> contentRow : recordsInContentTableIdentifiedByPK.entrySet())
 		{
-			final String primaryKeyIdentifier = auditedRow.getKey();
+			final String primaryKeyIdentifier = contentRow.getKey();
 			final List<TableRow> auditHistoryValue = recordsInAuditTable.get(primaryKeyIdentifier);
 			if (auditHistoryValue == null)
 			{
@@ -188,7 +188,7 @@ public class RevisionValidator
 				continue;
 			}
 
-			final Map<String, TableRow> incorrectColumns = determineIncorrectColumns(auditedRow.getValue(), lastRecord);
+			final Map<String, TableRow> incorrectColumns = determineIncorrectColumns(contentRow.getValue(), lastRecord);
 			if (!incorrectColumns.isEmpty())
 			{
 				rowsWithDifferentValues.put(primaryKeyIdentifier, incorrectColumns);
@@ -266,20 +266,20 @@ public class RevisionValidator
 		final Map<String, TableRow> incorrectColumns = new HashMap<>();
 		for (String columnName : columnNames)
 		{
-			final Object auditedValue = lastRevision.getColumnValue(columnName);
+			final Object contentValue = lastRevision.getColumnValue(columnName);
 			final Object actualColumnValue = actualRecord.getColumnValue(columnName);
 
-			final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) auditedValue);
+			final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) contentValue);
 			if (compare != 0)
 			{
 				if (incorrectColumns.isEmpty())
 				{
 					incorrectColumns.put("actual", new TableRow());
-					incorrectColumns.put("audited", new TableRow());
+					incorrectColumns.put("audit", new TableRow());
 				}
 
 				incorrectColumns.get("actual").addColumn(columnName, actualColumnValue);
-				incorrectColumns.get("audited").addColumn(columnName, auditedValue);
+				incorrectColumns.get("audit").addColumn(columnName, contentValue);
 			}
 		}
 		return incorrectColumns;
@@ -308,11 +308,11 @@ public class RevisionValidator
 		{
 			errorMessage.append("Row with identifier ");
 			errorMessage.append(identifierWithDifferentRowValues.getKey());
-			errorMessage.append(" has a different audit row than the actual value in the table to audit, the following columns differ: \n");
+			errorMessage.append(" has a different audit row than the actual value in the content table, the following columns differ: \n");
 
 			final Map<String, TableRow> records = identifierWithDifferentRowValues.getValue();
 			final TableRow actualColumnValues = records.get("actual");
-			final TableRow auditedColumnValues = records.get("audited");
+			final TableRow auditColumnValues = records.get("audit");
 
 			for (String columnName : actualColumnValues.getColumnNames())
 			{
@@ -320,8 +320,8 @@ public class RevisionValidator
 				errorMessage.append(columnName);
 				errorMessage.append(": ");
 				errorMessage.append(actualColumnValues.getColumnValue(columnName));
-				errorMessage.append(", audited value: ");
-				errorMessage.append(auditedColumnValues.getColumnValue(columnName));
+				errorMessage.append(", audit value: ");
+				errorMessage.append(auditColumnValues.getColumnValue(columnName));
 				errorMessage.append(".\n");
 			}
 		}
