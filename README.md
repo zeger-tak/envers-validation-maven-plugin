@@ -34,13 +34,20 @@ The plugin connects with your database and will inform you of the following:
     <artifactId>envers-validation-maven-plugin</artifactId>
     <version>${envers-validation-version}</version>
     <configuration>
-        <connectionPropertyFile>src/test/resources/connection.properties</connectionPropertyFile>
+        <!-- Property file can contain zero or more of the other parameters, but each of these parameters will not be overriden if it is already provided in the pom.xml. -->
+        <connectionPropertyFile>src/test/resources/connection.properties</connectionPropertyFile> 
+        
         <!--Add the following to ignore specific validations-->
         <ignorables>
             <ignorable>RevisionValidator</ignorable> <!--To ignore the entire validator. -->
             <ignorable>RevisionValidator.validateAllRecordsInContentTableHaveAValidLatestRevision</ignorable> <!--To ignore a specific validation method.-->
             <ignorable>RevisionValidator.validateAllRecordsInContentTableHaveAValidLatestRevision.CONTENT_TABLE_NAME</ignorable> <!--To ignore a specific run of a validation method.-->
         </ignorables>
+        <url>JDBC connection string.</>
+        <username>Database username used to connect with the database.</username>
+        <password>Database user password used to connect with the database.</password>
+        <driver>Database driver class used to connect with the database.</driver>
+        <auditTableInformationFile>Contains audit table information.</>
     </configuration>
     <dependencies>
         <!-- Add this dependency when running against an oracle db, -->

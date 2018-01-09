@@ -3,7 +3,6 @@ package com.github.zeger_tak.enversvalidationplugin.utils;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +16,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.entities.AuditTableInformation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoFailureException;
@@ -29,57 +27,6 @@ public final class PropertyUtils
 {
 	private PropertyUtils()
 	{
-	}
-
-	@Nonnull
-	public static ConnectionProviderInstance getConnectionProperties(@Nonnull File file) throws MojoFailureException
-	{
-		final Properties connectionPropertiesInFile = getPropertiesFromFile(file);
-		return createConnectionProvider(connectionPropertiesInFile);
-	}
-
-	@Nonnull
-	private static ConnectionProviderInstance createConnectionProvider(@Nonnull Properties connectionPropertiesInFile) throws MojoFailureException
-	{
-		final String usernamePropertyKey = "username";
-		final String passwordPropertyKey = "password";
-		final String driverClassPropertyKey = "driver";
-		final String connectionUrlPropertyKey = "url";
-		final String auditTableInformationFilePropertyKey = "auditTableInformationFile";
-
-		final String username = connectionPropertiesInFile.getProperty(usernamePropertyKey);
-		final String password = connectionPropertiesInFile.getProperty(passwordPropertyKey);
-		final String driverClass = connectionPropertiesInFile.getProperty(driverClassPropertyKey);
-		final String connectionUrl = connectionPropertiesInFile.getProperty(connectionUrlPropertyKey);
-		final String auditTableInformationFile = connectionPropertiesInFile.getProperty(auditTableInformationFilePropertyKey);
-
-		final List<String> propertyKeysMissing = new ArrayList<>(4);
-		if (StringUtils.isBlank(username))
-		{
-			propertyKeysMissing.add(usernamePropertyKey);
-		}
-		if (StringUtils.isBlank(password))
-		{
-			propertyKeysMissing.add(passwordPropertyKey);
-		}
-		if (StringUtils.isBlank(driverClass))
-		{
-			propertyKeysMissing.add(driverClassPropertyKey);
-		}
-		if (StringUtils.isBlank(connectionUrl))
-		{
-			propertyKeysMissing.add(connectionUrlPropertyKey);
-		}
-		if (StringUtils.isBlank(auditTableInformationFile))
-		{
-			propertyKeysMissing.add(auditTableInformationFilePropertyKey);
-		}
-		if (!propertyKeysMissing.isEmpty())
-		{
-			throw new MojoFailureException("The following required connection are missing from the connection property file: " + propertyKeysMissing);
-		}
-
-		return new ConnectionProviderInstance(connectionUrl, driverClass, username, password, auditTableInformationFile);
 	}
 
 	@Nonnull
@@ -122,7 +69,7 @@ public final class PropertyUtils
 				}
 
 				auditTableInformationMap.putIfAbsent(parentAuditTableInformationType.getAuditTableName(), new AuditTableInformation(parentAuditTableInformationType.getAuditTableName(), parseContentTableName(parentAuditTableInformationType, auditTablePostFix), new HashSet<>(parentAuditTableInformationType.getColumnNamePresentInContentTableButNotInAuditTable())));
-				final AuditTableInformation parentAuditTableInformation = auditTableInformationMap.get(auditTableParentName);				
+				final AuditTableInformation parentAuditTableInformation = auditTableInformationMap.get(auditTableParentName);
 				auditTableInformation.setAuditTableParent(parentAuditTableInformation);
 			}
 		}
@@ -136,7 +83,7 @@ public final class PropertyUtils
 	}
 
 	@Nonnull
-	private static Properties getPropertiesFromFile(@Nonnull File file) throws MojoFailureException
+	public static Properties getPropertiesFromFile(@Nonnull File file) throws MojoFailureException
 	{
 		Properties connectionPropertiesInFile = new Properties();
 
