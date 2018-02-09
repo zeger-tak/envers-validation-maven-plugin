@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.github.zeger_tak.enversvalidationplugin.annotation.AuditTableInformationMap;
 import com.github.zeger_tak.enversvalidationplugin.annotation.ConnectionProvider;
@@ -22,7 +23,6 @@ import com.github.zeger_tak.enversvalidationplugin.entities.AuditTableInformatio
 import com.github.zeger_tak.enversvalidationplugin.entities.RevisionConstants;
 import com.github.zeger_tak.enversvalidationplugin.entities.TableRow;
 import com.github.zeger_tak.enversvalidationplugin.exceptions.ValidationException;
-import org.apache.commons.lang3.ObjectUtils;
 import org.dbunit.dataset.DataSetException;
 
 /**
@@ -274,7 +274,7 @@ public class RevisionValidator
 				continue;
 			}
 
-			final int compare = ObjectUtils.compare((Comparable) actualColumnValue, (Comparable) auditValue);
+			final int compare = compare((Comparable) actualColumnValue, (Comparable) auditValue);
 			if (compare != 0)
 			{
 				if (incorrectColumns.isEmpty())
@@ -288,6 +288,32 @@ public class RevisionValidator
 			}
 		}
 		return incorrectColumns;
+	}
+
+	public static <T extends Comparable<? super T>> int compare(@Nullable final Comparable c1, @Nullable final Comparable c2)
+	{
+		if (c1 == c2)
+		{
+			return 0;
+		}
+		else if (c1 == null)
+		{
+			return -1;
+		}
+		else if (c2 == null)
+		{
+			return 1;
+		}
+		else if (!c1.getClass().isAssignableFrom(c2.getClass()))
+		{
+			return -1;
+		}
+		else if (!c2.getClass().isAssignableFrom(c1.getClass()))
+		{
+			return 1;
+		}
+
+		return c1.compareTo(c2);
 	}
 
 	void validateLatestRevisionComparisonResult(@Nonnull List<String> identifiersWhichShouldHaveAnAddOrModifyRevision, @Nonnull Map<String, Map<String, TableRow>> rowsWithDifferentValues)
