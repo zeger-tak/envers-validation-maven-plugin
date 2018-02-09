@@ -47,6 +47,11 @@ The plugin connects with your database and will inform you of the following:
         <username>Database username used to connect with the database.</username>
         <password>Database user password used to connect with the database.</password>
         <driver>Database driver class used to connect with the database.</driver>
+        <schema>
+            Optional parameter specifying for which schema the validations should run.
+            Schema will be inferred from the url if no entry is provided for this parameter.
+            Warning: If the schema is not provided and cannot be inferred from the url, metadata for all authorized schemas will be retrieved.
+        </schema>
         <auditTableInformationFile>Contains audit table information.</>
     </configuration>
     <dependencies>
@@ -66,7 +71,7 @@ The plugin connects with your database and will inform you of the following:
 </plugin>
 ```
 ### Connection property file
-The following properties should be provided within the connection property file:
+The connection property file may contain any of the other properties:
 ```
 url=jdbc:postgresql://localhost/schemaname #example of a jdbc connection url.
 driver=org.postgresql.Driver #example of the driver class.
@@ -102,7 +107,7 @@ An example XML file:
 The plugin can now be executed with the following statement
 ``` envers-validation:validate ```
 
-Or added to a phase and automatically executed during this phase by adding the following lines to the pom.xml
+Or added to a phase and automatically executed during the verify phase by adding the following lines to the pom.xml
 ```
 <executions>
     <execution>

@@ -1,6 +1,7 @@
 package com.github.zeger_tak.enversvalidationplugin.connection;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.github.zeger_tak.enversvalidationplugin.exceptions.DatabaseNotSupportedException;
 import org.dbunit.IDatabaseTester;
@@ -19,18 +20,20 @@ public class ConnectionProviderInstance
 	private final String connectionUrl;
 	private final String username;
 	private final String password;
+	private final String schema;
 	private final String auditTableInformationFile;
 	private final IDatabaseTester databaseTester;
 
 	private IDatabaseConnection databaseConnection;
 	private DatabaseQueries databaseQueries;
 
-	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password, @Nonnull String auditTableInformationFile)
+	public ConnectionProviderInstance(@Nonnull String connectionUrl, @Nonnull String driverClass, @Nonnull String username, @Nonnull String password, @Nullable String schema, @Nonnull String auditTableInformationFile)
 	{
 		this.driverClass = driverClass;
 		this.connectionUrl = connectionUrl;
 		this.password = password;
 		this.username = username;
+		this.schema = schema;
 		this.auditTableInformationFile = auditTableInformationFile;
 		databaseTester = newDatabaseTester();
 	}
@@ -40,23 +43,19 @@ public class ConnectionProviderInstance
 	{
 		try
 		{
+			final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password, schema);
+			databaseConnection = jdbcDatabaseTester.getConnection();
 			if (driverClass.equals(ORACLE_DRIVER))
 			{
 				// For Oracle, provide the schema name. Otherwise, metadata for ALL objects is retrieved.
-				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password, username);
-				databaseConnection = jdbcDatabaseTester.getConnection();
 				getDatabaseConnection().getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new OracleDataTypeFactory());
-
 				databaseQueries = new OracleQueries(this);
 				return jdbcDatabaseTester;
 			}
 			else if (driverClass.equals(POSTGRESQL_DRIVER))
 			{
 				// For Postgresql
-				final JdbcDatabaseTester jdbcDatabaseTester = new JdbcDatabaseTester(driverClass, connectionUrl, username, password);
-				databaseConnection = jdbcDatabaseTester.getConnection();
 				getDatabaseConnection().getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new PostgresqlDataTypeFactory());
-
 				databaseQueries = new PostgresQueries(this);
 				return jdbcDatabaseTester;
 			}

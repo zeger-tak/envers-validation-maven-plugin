@@ -36,6 +36,7 @@ public class EnversValidationMojo extends AbstractMojo
 	private static final String CONNECTION_PROPERTY_FILE_PROPERTY_KEY = "connectionPropertyFile";
 	private static final String PACKAGE_TO_SCAN_FOR_VALIDATORS_PROPERTY_KEY = "packageToScanForValidators";
 	private static final String IGNORABLES_PROPERTY_KEY = "ignorables";
+	private static final String SCHEMA_PROPERTY_KEY = "schema";
 
 	/**
 	 * Database username used to connect with the database.
@@ -64,6 +65,14 @@ public class EnversValidationMojo extends AbstractMojo
 	 */
 	@Parameter(property = URL_PROPERTY_KEY)
 	private String url;
+
+	/**
+	 * Name of the schema holding the audit and content tables.
+	 * This parameter is not required if the schema can be inferred from the {@link #url}.
+	 * Warning: Metadata for all authorized schemas will be retrieved if no {@link #schema} is provided, the schema can not be inferred from the {@link #url} and the {@link #username} has access to multiple schema's.
+	 */
+	@Parameter(property = SCHEMA_PROPERTY_KEY)
+	private String schema;
 
 	/**
 	 * Contains audit table information.
@@ -137,7 +146,7 @@ public class EnversValidationMojo extends AbstractMojo
 		updatePropertiesFromPropertyFile(file);
 		validateAllRequiredPropertiesAreAvailable();
 
-		return new ConnectionProviderInstance(url, driver, username, password, auditTableInformationFile);
+		return new ConnectionProviderInstance(url, driver, username, password, schema, auditTableInformationFile);
 	}
 
 	private void updatePropertiesFromPropertyFile(@Nullable File file) throws MojoFailureException
@@ -172,6 +181,10 @@ public class EnversValidationMojo extends AbstractMojo
 		{
 			ignorables = (List<String>) connectionPropertiesInFile.get(IGNORABLES_PROPERTY_KEY);
 		}
+		if (schema == null)
+		{
+			schema = connectionPropertiesInFile.getProperty(SCHEMA_PROPERTY_KEY);
+		}
 	}
 
 	private void validateAllRequiredPropertiesAreAvailable() throws MojoFailureException
@@ -197,6 +210,12 @@ public class EnversValidationMojo extends AbstractMojo
 		{
 			propertyKeysMissing.add(AUDIT_TABLE_INFORMATION_FILE_PROPERTY_KEY);
 		}
+
+		if (StringUtils.isBlank(schema))
+		{
+			getLog().warn("Schema is not provided as a parameter, metadata for all authorized schemas will be retrieved if the schema cannot be inferred from the url parameter.");
+		}
+
 		if (!propertyKeysMissing.isEmpty())
 		{
 			throw new MojoFailureException("The following required connection are missing from the connection property file: " + propertyKeysMissing);
