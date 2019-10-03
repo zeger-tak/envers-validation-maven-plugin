@@ -28,7 +28,7 @@ public class ForeignKeyConstraintValidator
 	private ConnectionProviderInstance connectionProvider;
 
 	/**
-	 * Validates that no table has a foreign key to the revision table except for the speified  audit tables.
+	 * Validates that no table has a foreign key to the revision table except for the specified audit tables.
 	 * This validator will catch cases not caught by {@link AuditTableInformationMapValidator}.
 	 */
 	@Validate
@@ -45,7 +45,7 @@ public class ForeignKeyConstraintValidator
 	}
 
 	/**
-	 * Validates that all audit tables in the audit table infomration map have a foreign key to the revision table.
+	 * Validates that all audit tables in the audit table information map have a foreign key to the revision table.
 	 */
 	@Validate
 	public void validateAllAuditTablesHaveAForeignKeyToRevisionTable() throws SQLException, DataSetException
