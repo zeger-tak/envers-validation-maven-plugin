@@ -1,10 +1,5 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,6 +11,9 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
 import com.github.zeger_tak.enversvalidationplugin.entities.AuditTableInformation;
@@ -23,13 +21,18 @@ import com.github.zeger_tak.enversvalidationplugin.entities.RevisionConstants;
 import com.github.zeger_tak.enversvalidationplugin.entities.TableRow;
 import com.github.zeger_tak.enversvalidationplugin.exceptions.ValidationException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class RevisionValidatorHistoryFlowParameterizedTest
 {
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
+
 	private static final String REV_COLUMN = "rev";
 
 	private final RevisionValidator validator;
@@ -96,15 +99,15 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 				// No history records
 				{"noHistoryAtAll",                  Collections.emptyMap(),                                                                      Collections.emptyMap(),   null, null},
 				{"noHistoryButFoundTableName", 		Collections.singletonMap(id1, Collections.emptyList()),                                      Collections.emptyMap(),   null, null},
-				
+
 				// Single rows
 				{"onlyAdd",				            Collections.singletonMap(id1, Collections.singletonList(addRevision)), 				          Collections.emptyMap(),  null, expectedExceptionMessageAddModifyId1},
 				{"onlyModify",			            Collections.singletonMap(id1, Collections.singletonList(modifyRevision)), 			          Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"onlyRemove",			            Collections.singletonMap(id1, Collections.singletonList(removeRevision)), 			          Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
 				{"onlyDoNotValidate",	            Collections.singletonMap(id1, Collections.singletonList(doNotValidateRevision)),	          Collections.emptyMap(),  expectedExceptionMessageForTableWithoutRevtypeColumn, expectedExceptionMessageForTableWithoutRevtypeColumn},
 				// "Do not validate" revisions will not be included in the testcases below, as databaseQueries.getRevTypeColumnName is expected to be nonnull
-				
-				// Two rows for one identifier 
+
+				// Two rows for one identifier
 				{"firstAddThenAnotherAdd",			Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision)),			              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstAddThenModify",				Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision)),		              Collections.emptyMap(),  null, expectedExceptionMessageAddModifyId1},
 				{"firstAddThenRemove",				Collections.singletonMap(id1, Arrays.asList(addRevision, removeRevision)),		              Collections.emptyMap(),  null, null},
@@ -114,7 +117,7 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 				{"firstRemoveThenAdd",				Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstRemoveThenModify",			Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstRemoveThenRemove",			Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision)),		              Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
-				
+
 				// Three rows for one identifier
 				{"firstAddThenAddThenAdd",			Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstAddThenAddThenModify",		Collections.singletonMap(id1, Arrays.asList(addRevision, addRevision, modifyRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
@@ -122,27 +125,27 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 				{"firstAddThenModifyThenAdd",		Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstAddThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, modifyRevision)),	  Collections.emptyMap(),  null, expectedExceptionMessageAddModifyId1},
 				{"firstAddThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(addRevision, modifyRevision, removeRevision)),	  Collections.emptyMap(),  null, null},
-				
+
 				{"firstModifyThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstModifyThenAddThenModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, modifyRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstModifyThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, removeRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
 				{"firstModifyThenModifyThenAdd",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, addRevision)),		  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstModifyThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, modifyRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstModifyThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(modifyRevision, addRevision, removeRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
-				
+
 				{"firstRemoveThenAddThenAdd",		Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, addRevision)),       Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstRemoveThenAddThenModify",	Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, modifyRevision)),    Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstRemoveThenAddThenRemove",	Collections.singletonMap(id1, Arrays.asList(removeRevision, addRevision, removeRevision)),	  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
 				{"firstRemoveThenModifyThenAdd",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, addRevision)),    Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstRemoveThenModifyThenModify",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, modifyRevision)), Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1},
 				{"firstRemoveThenModifyThenRemove",	Collections.singletonMap(id1, Arrays.asList(removeRevision, modifyRevision, removeRevision)), Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, null},
-				
+
 				// One rows for two identifiers
 				{"firstIdentifierValidHistorySecondIdentifierValidHistory",		validHistory1ValidHistory2,		                                  Collections.emptyMap(),  null, expectedExceptionMessageAddModifyId1And2},
 				{"firstIdentifierValidHistorySecondIdentifierInvalidHistory",	validHistory1InvalidHistory2,	                                  Collections.emptyMap(),  expectedExceptionMessageValidFlowId2, expectedExceptionMessageAddModifyId1And2},
 				{"firstIdentifierInvalidHistorySecondIdentifierInvalidHistory",	invalidHistory1ValidHistory2,	                                  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1, expectedExceptionMessageAddModifyId1And2},
 				{"firstIdentifierInvalidHistorySecondIdentifierInvalidHistory",	invalidHistory1InvalidHistory2,	                                  Collections.emptyMap(),  expectedExceptionMessageValidFlowId1And2, expectedExceptionMessageAddModifyId1And2},
-				
+
 				// Valid history with latest Add/Modify and matching content in content table.
 				{"addAndMatchingContent",	        Collections.singletonMap(id1, Collections.singletonList(addRevision)),                        Collections.singletonMap(id1, doNotValidateRevision), null, null},
 				{"modifyAndMatchingContent",	    Collections.singletonMap(id1, Collections.singletonList(modifyRevision)),                     Collections.singletonMap(id1, doNotValidateRevision), expectedExceptionMessageValidFlowId1, null},
@@ -192,15 +195,10 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 		}
 		else
 		{
-			try
-			{
-				validator.validateHistoryIsAValidFlow();
-				fail("Expected a " + ValidationException.class.getSimpleName() + " with the following message " + expectedExceptionMessageValidFlow);
-			}
-			catch (ValidationException e)
-			{
-				assertEquals("Caught a " + ValidationException.class.getSimpleName() + " as expected, but exception message was different: ", expectedExceptionMessageValidFlow, e.getMessage());
-			}
+			expectedException.expect(ValidationException.class);
+			expectedException.expectMessage(expectedExceptionMessageValidFlow);
+
+			validator.validateHistoryIsAValidFlow();
 		}
 	}
 
@@ -213,15 +211,10 @@ public class RevisionValidatorHistoryFlowParameterizedTest
 		}
 		else
 		{
-			try
-			{
-				validator.validateLatestAddOrModifyRevisionRefersToExistingContent();
-				fail("Expected a " + ValidationException.class.getSimpleName() + " with the following message " + expectedExceptionMessageAddOrModifyContent);
-			}
-			catch (ValidationException e)
-			{
-				assertEquals("Caught a " + ValidationException.class.getSimpleName() + " as expected, but exception message was different: ", expectedExceptionMessageAddOrModifyContent, e.getMessage());
-			}
+			expectedException.expect(ValidationException.class);
+			expectedException.expectMessage(expectedExceptionMessageAddOrModifyContent);
+
+			validator.validateLatestAddOrModifyRevisionRefersToExistingContent();
 		}
 	}
 }

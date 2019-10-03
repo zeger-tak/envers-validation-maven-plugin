@@ -1,13 +1,13 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.when;
-
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import static org.mockito.Mockito.when;
+
+import static org.junit.Assert.assertEquals;
 
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
@@ -16,6 +16,7 @@ import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -25,6 +26,9 @@ public class ForeignKeyConstraintValidatorTest
 {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	@InjectMocks
 	private ForeignKeyConstraintValidator validator;
@@ -52,17 +56,11 @@ public class ForeignKeyConstraintValidatorTest
 		when(databaseQueries.getListOfTablesWithForeignKeysToRevisionTable()).thenReturn(tablesWithForeignKeys);
 		when(auditTableInformationMap.keySet()).thenReturn(Collections.emptySet());
 
-		try
-		{
-			// When
-			validator.validateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMap();
-			fail("Expected a " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("Tables found with a reference to the revision table, which are not on the white list: [not specified]", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("Tables found with a reference to the revision table, which are not on the white list: [not specified]");
+
+		// When
+		validator.validateNoForeignKeysExistsForTablesNotSpecifiedOnAuditTableInformationMap();
 	}
 
 	@Test

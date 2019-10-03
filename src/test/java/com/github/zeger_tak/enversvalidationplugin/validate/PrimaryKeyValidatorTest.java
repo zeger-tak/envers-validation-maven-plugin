@@ -1,18 +1,18 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
@@ -22,6 +22,7 @@ import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -34,6 +35,9 @@ public class PrimaryKeyValidatorTest
 
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	@Mock
 	private ConnectionProviderInstance connectionProvider;
@@ -50,7 +54,7 @@ public class PrimaryKeyValidatorTest
 	@Test
 	public void testGenerateTestDataWithEmptySet() throws SQLException, DataSetException
 	{
-		//Given
+		// Given
 		final Map<String, AuditTableInformation> auditTableInformationMap = new HashMap<>();
 
 		// When
@@ -63,7 +67,7 @@ public class PrimaryKeyValidatorTest
 	@Test
 	public void testGenerateTestData() throws SQLException, DataSetException
 	{
-		//Given
+		// Given
 		final AuditTableInformation auditTableInformation = new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME);
 		final Map<String, AuditTableInformation> auditTableInformationMap = Collections.singletonMap(AUDIT_TABLE_NAME, auditTableInformation);
 
@@ -91,17 +95,11 @@ public class PrimaryKeyValidatorTest
 		// Given
 		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.emptyList(), Collections.emptyList());
 
-		try
-		{
-			// When
-			validator.validateAuditTableHasAValidPrimaryKey();
-			fail("Expected a " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("Audit table auditTable has no primary key.", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("Audit table auditTable has no primary key.");
+
+		// When
+		validator.validateAuditTableHasAValidPrimaryKey();
 	}
 
 	@Test
@@ -111,17 +109,11 @@ public class PrimaryKeyValidatorTest
 		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME), Collections.emptyList());
 		when(databaseQueries.getRevisionTableIdentifierColumnName()).thenReturn("rev");
 
-		try
-		{
-			// When
-			validator.validateAuditTableHasAValidPrimaryKey();
-			fail("Expected a " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("Audit table auditTable has a primary key that is not compromised of the primary key columns of the content table [contentTable] + [rev] the following columns are missing: [rev]", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("Audit table auditTable has a primary key that is not compromised of the primary key columns of the content table [contentTable] + [rev] the following columns are missing: [rev]");
+
+		// When
+		validator.validateAuditTableHasAValidPrimaryKey();
 	}
 
 	@Test
@@ -131,17 +123,11 @@ public class PrimaryKeyValidatorTest
 		final PrimaryKeyValidator validator = new PrimaryKeyValidator(connectionProvider, new AuditTableInformation(AUDIT_TABLE_NAME, CONTENT_TABLE_NAME), Arrays.asList("unexpected", REVISION_COLUMN_NAME, CONTENT_TABLE_NAME), Collections.singletonList(CONTENT_TABLE_NAME));
 		when(databaseQueries.getRevisionTableIdentifierColumnName()).thenReturn(REVISION_COLUMN_NAME);
 
-		try
-		{
-			// When
-			validator.validateAuditTableHasAValidPrimaryKey();
-			fail("Expected a " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("The primary key of audit table auditTable is comprised of more columns than expected, the following columns were not expected: [unexpected] this error may also be thrown if the content table has no primary key.", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("The primary key of audit table auditTable is comprised of more columns than expected, the following columns were not expected: [unexpected] this error may also be thrown if the content table has no primary key.");
+
+		// When
+		validator.validateAuditTableHasAValidPrimaryKey();
 	}
 
 	@Test
