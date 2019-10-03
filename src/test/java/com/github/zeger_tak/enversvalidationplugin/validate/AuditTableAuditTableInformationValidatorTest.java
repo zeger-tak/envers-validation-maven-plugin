@@ -1,14 +1,18 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.mockito.Mockito.when;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
@@ -20,6 +24,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -32,21 +38,24 @@ public class AuditTableAuditTableInformationValidatorTest
 	private AuditTableInformationMapValidator validator;
 
 	@Mock
-	private Map<String, AuditTableInformation> auditTableInformationMap;
-
-	@Mock
-	private Set<String> auditTablesInDatabase;
-
-	@Mock
 	private ConnectionProviderInstance connectionProvider;
 
 	@Mock
 	private DatabaseQueries databaseQueries;
 
+	private Map<String, AuditTableInformation> auditTableInformationMap;
+	private Set<String> auditTablesInDatabase;
+
 	@Before
 	public void init()
 	{
+		auditTableInformationMap = Mockito.mock(Map.class);
+		auditTablesInDatabase = Mockito.mock(Set.class);
+		validator = new AuditTableInformationMapValidator(auditTableInformationMap, auditTablesInDatabase);
+		MockitoAnnotations.initMocks(this);
+
 		when(connectionProvider.getQueries()).thenReturn(databaseQueries);
+
 	}
 
 	@Test
@@ -114,6 +123,52 @@ public class AuditTableAuditTableInformationValidatorTest
 		catch (ValidationException e)
 		{
 			assertEquals("The following audit tables are not configured in the audit table information map: [NOT SPECIFIED]", e.getMessage());
+		}
+	}
+
+	@Test
+	public void testValidateAllContentTablesHaveAllColumnsInAuditTable_noForgottenColumns() throws DataSetException, SQLException
+	{
+		// Given
+		final Set<String> contentTableColumns = Stream.of("AuditedCol", "UnAuditedCol").collect(Collectors.toSet());
+		final Set<String> auditTableColumns = Stream.of("AuditedCol", "InAuditButNotInContent").collect(Collectors.toSet());
+		final Set<String> unAuditedColumns = Stream.of("UnAuditedCol".toUpperCase()).collect(Collectors.toSet());
+
+		final AuditTableInformation auditTableInformation = new AuditTableInformation("AuditTableName", "ContentTableName", unAuditedColumns);
+
+		when(databaseQueries.getAllColumns(auditTableInformation.getContentTableName())).thenReturn(contentTableColumns);
+		when(databaseQueries.getAllColumns(auditTableInformation.getAuditTableName())).thenReturn(auditTableColumns);
+
+		when(auditTableInformationMap.values()).thenReturn(Arrays.asList(auditTableInformation));
+
+		// When
+		validator.validateAllContentTablesHaveAllColumnsInAuditTable();
+	}
+
+	@Test
+	public void testValidateAllContentTablesHaveAllColumnsInAuditTable_withForgottenColumn() throws DataSetException, SQLException
+	{
+		// Given
+		final Set<String> contentTableColumns = Stream.of("AuditedCol", "UnAuditedCol", "ForgottenCol").collect(Collectors.toSet());
+		final Set<String> auditTableColumns = Stream.of("AuditedCol", "InAuditButNotInContent").collect(Collectors.toSet());
+		final Set<String> unAuditedColumns = Stream.of("UnAuditedCol".toUpperCase()).collect(Collectors.toSet());
+
+		final AuditTableInformation auditTableInformation = new AuditTableInformation("AuditTableName", "ContentTableName", unAuditedColumns);
+
+		when(databaseQueries.getAllColumns(auditTableInformation.getContentTableName())).thenReturn(contentTableColumns);
+		when(databaseQueries.getAllColumns(auditTableInformation.getAuditTableName())).thenReturn(auditTableColumns);
+
+		when(auditTableInformationMap.values()).thenReturn(Arrays.asList(auditTableInformation));
+
+		try
+		{
+			// When
+			validator.validateAllContentTablesHaveAllColumnsInAuditTable();
+			fail("Expected ValidationException");
+		}
+		catch (ValidationException e)
+		{
+			assertEquals("The following columns are missing: AuditTableName.ForgottenCol", e.getMessage());
 		}
 	}
 }
