@@ -26,7 +26,7 @@ public interface DatabaseQueries
 
 	@Nonnull
 	String getRevisionTableName();
-	
+
 	@Nonnull
 	CachedResultSetTable getTableByName(@Nonnull String tableName) throws SQLException, DataSetException;
 
@@ -44,6 +44,9 @@ public interface DatabaseQueries
 
 	@Nonnull
 	Set<String> getListOfTablesWithForeignKeysToRevisionTable() throws SQLException, DataSetException;
+
+	@Nonnull
+	Set<String> getAllColumns(@Nonnull String tableName) throws SQLException, DataSetException;
 
 	@Nonnull
 	Set<String> getAllNonnullColumns(@Nonnull String tableName) throws SQLException, DataSetException;

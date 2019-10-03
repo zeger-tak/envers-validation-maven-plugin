@@ -85,10 +85,10 @@ public class PostgresQueries extends AbstractQueries
 	public Set<String> getListOfTablesWithForeignKeysToRevisionTable() throws SQLException, DataSetException
 	{
 		final String query =
-				//@formatter:off	
-				"select upper(tc.table_name) table_name from information_schema.referential_constraints rc " 
-				+ "inner join information_schema.table_constraints tc on tc.constraint_name = rc.constraint_name " 
-				+ "inner join information_schema.table_constraints tc2 on tc2.constraint_name = rc.unique_constraint_name " 
+		//@formatter:off
+				"select upper(tc.table_name) table_name from information_schema.referential_constraints rc "
+				+ "inner join information_schema.table_constraints tc on tc.constraint_name = rc.constraint_name "
+				+ "inner join information_schema.table_constraints tc2 on tc2.constraint_name = rc.unique_constraint_name "
 				+ "where tc2.constraint_type = 'PRIMARY KEY' and tc2.table_name = '" + getRevisionTableName() + "'";
 				//@formatter:on
 
@@ -105,12 +105,33 @@ public class PostgresQueries extends AbstractQueries
 
 	@Nonnull
 	@Override
+	public Set<String> getAllColumns(@Nonnull String tableName) throws SQLException, DataSetException
+	{
+		final String query =
+		//@formatter:off
+				"select column_name from information_schema.columns "
+				+ "where upper(table_name) = upper('" + tableName + "');";
+				//@formatter:on
+
+		final CachedResultSetTable tablesInDatabaseWithForeignKeyToRevisionTable = (CachedResultSetTable) connectionProvider.getDatabaseConnection().createQueryTable("columns", query);
+
+		final Set<String> auditTablesInDatabase = new HashSet<>(tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount());
+		for (int i = 0; i < tablesInDatabaseWithForeignKeyToRevisionTable.getRowCount(); i++)
+		{
+			auditTablesInDatabase.add((String) tablesInDatabaseWithForeignKeyToRevisionTable.getValue(i, "column_name"));
+		}
+
+		return auditTablesInDatabase;
+	}
+
+	@Nonnull
+	@Override
 	public Set<String> getAllNonnullColumns(@Nonnull String tableName) throws SQLException, DataSetException
 	{
 		final String query =
-				//@formatter:off
-				"select column_name from information_schema.columns " 
-				+ "where upper(table_name) = upper('" + tableName + "') " 
+		//@formatter:off
+				"select column_name from information_schema.columns "
+				+ "where upper(table_name) = upper('" + tableName + "') "
 				+ "and is_nullable = 'NO';";
 				//@formatter:on
 
