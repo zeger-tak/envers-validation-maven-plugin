@@ -15,6 +15,7 @@ The plugin connects with your database and will inform you of the following:
     - If a table was found with a foreign key to the revinfo table but the table name is not present in the whitelist.
     - If an audit table exists but the content table does not.
 - Incorrect structure of the audit table
+    - A column that is present in the audited table, but not in the audit table (and is not present in the whitelist).
     - A primary key for an audit table which does not match with the primary key of the content table. (Primary key of an audit table should consist of the primary key columns of the content table + the rev column.)
     - An audit table does not have a foreign key to the revinfo table.
     - If a column in the audit table is nonnull but the column is not part of the primary key, as this prevents Envers from inserting 'Remove' revisions.
