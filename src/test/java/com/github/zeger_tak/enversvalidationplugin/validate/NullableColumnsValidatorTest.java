@@ -1,9 +1,5 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +7,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.mockito.Mockito.when;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
@@ -20,6 +21,7 @@ import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -28,6 +30,9 @@ public class NullableColumnsValidatorTest
 {
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	@Mock
 	private Map<String, AuditTableInformation> auditTableInformationMap;
@@ -114,16 +119,11 @@ public class NullableColumnsValidatorTest
 
 		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, auditTableInformation, pkColumnNames, nonNullColumnNames);
 
-		try
-		{
-			// When
-			validator.validateAllColumnsExceptPrimaryKeyAreNullable();
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("The following columns for table tableName have a not null constraint which prevents remove revisions: [unexpectedNonNullColumnName]", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("The following columns for table tableName have a not null constraint which prevents remove revisions: [unexpectedNonNullColumnName]");
+
+		// When
+		validator.validateAllColumnsExceptPrimaryKeyAreNullable();
 	}
 
 	@Test
@@ -144,15 +144,10 @@ public class NullableColumnsValidatorTest
 
 		final NullableColumnsValidator validator = new NullableColumnsValidator(connectionProvider, auditTableInformation, pkColumnNames, nonNullColumnNames);
 
-		try
-		{
-			// When
-			validator.validateAllColumnsExceptPrimaryKeyAreNullable();
-		}
-		catch (ValidationException e)
-		{
-			// Then
-			assertEquals("The following columns for table tableName have a not null constraint which prevents remove revisions: [" + unexpectedNonNullColumnName1 + ", " + unexpectedNonNullColumnName2 + "]", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("The following columns for table tableName have a not null constraint which prevents remove revisions: [" + unexpectedNonNullColumnName1 + ", " + unexpectedNonNullColumnName2 + "]");
+
+		// When
+		validator.validateAllColumnsExceptPrimaryKeyAreNullable();
 	}
 }

@@ -1,10 +1,12 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -14,12 +16,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static org.mockito.Matchers.any;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
@@ -32,6 +34,7 @@ import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -43,6 +46,9 @@ public class RevisionValidatorTest
 
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	@Mock
 	private Map<String, AuditTableInformation> auditTableInformationMap;
@@ -127,16 +133,11 @@ public class RevisionValidatorTest
 
 		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable);
 
-		try
-		{
-			// When
-			validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
-			fail("Expected " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			assertEquals("The following identifiers [auditTable] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("The following identifiers [auditTable] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.");
+
+		// When
+		validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 	}
 
 	@Test
@@ -154,16 +155,11 @@ public class RevisionValidatorTest
 
 		final RevisionValidator validator = new RevisionValidator(connectionProvider, auditTableInformation, recordsInAuditTable, recordsInContentTable);
 
-		try
-		{
-			// When
-			validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
-			fail("Expected a " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			assertEquals("The audit table auditTable does not have a column referring to the revision table.", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("The audit table auditTable does not have a column referring to the revision table.");
+
+		// When
+		validator.validateAllRecordsInContentTableHaveAValidLatestRevision();
 	}
 
 	@Test
@@ -384,16 +380,11 @@ public class RevisionValidatorTest
 
 		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, mock(Map.class), mock(Map.class)));
 
-		try
-		{
-			// When
-			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
-			fail("Expected " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			assertEquals("The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.", e.getMessage());
-		}
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage("The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.");
+
+		// When
+		validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
 	@Test
@@ -415,21 +406,17 @@ public class RevisionValidatorTest
 
 		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, mock(Map.class), mock(Map.class)));
 
-		try
-		{
-			// When
-			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
-			fail("Expected " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			assertEquals(
-					//@formatter:off
-				"The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.\n" +
-						"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the content table, the following columns differ: \n" +
-						"\tActual value for column column: actualValue, audit value: auditValue.\n", e.getMessage());
-			//@formatter:on
-		}
+		//@formatter:off
+		final String expectedMessage = "The following identifiers [identifierWithMissingRevision] in table auditTable do not have an Add/Modify revision in table auditTable as their last revision or do not have a revision at all.\n" +
+				"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the content table, the following columns differ: \n" +
+				"\tActual value for column column: actualValue, audit value: auditValue.\n";
+		//@formatter:on
+
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage(expectedMessage);
+
+		// When
+		validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
 	@Test
@@ -451,20 +438,16 @@ public class RevisionValidatorTest
 
 		final RevisionValidator validator = spy(new RevisionValidator(connectionProvider, auditTableInformation, mock(Map.class), mock(Map.class)));
 
-		try
-		{
-			// When
-			validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
-			fail("Expected " + ValidationException.class.getSimpleName());
-		}
-		catch (ValidationException e)
-		{
-			assertEquals(
-					//@formatter:off
-				"Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the content table, the following columns differ: \n" +
-						"\tActual value for column column: actualValue, audit value: auditValue.\n", e.getMessage());
-			//@formatter:on
-		}
+		//@formatter:off
+		final String expectedMessage = "Row with identifier identifierWithDifferentAudit has a different audit row than the actual value in the content table, the following columns differ: \n" +
+					"\tActual value for column column: actualValue, audit value: auditValue.\n";
+		//@formatter:on
+
+		expectedException.expect(ValidationException.class);
+		expectedException.expectMessage(expectedMessage);
+
+		// When
+		validator.validateLatestRevisionComparisonResult(identifiersWhichShouldHaveAnAddOrModifyRevision, rowsWithDifferentValues);
 	}
 
 	@Test

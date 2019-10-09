@@ -1,11 +1,5 @@
 package com.github.zeger_tak.enversvalidationplugin.validate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +9,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.github.zeger_tak.enversvalidationplugin.connection.ConnectionProviderInstance;
 import com.github.zeger_tak.enversvalidationplugin.connection.DatabaseQueries;
 import com.github.zeger_tak.enversvalidationplugin.entities.AuditTableInformation;
@@ -22,7 +19,9 @@ import com.github.zeger_tak.enversvalidationplugin.exceptions.ValidationExceptio
 import org.dbunit.database.CachedResultSetTable;
 import org.dbunit.dataset.DataSetException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -30,10 +29,12 @@ import org.junit.runners.Parameterized;
 public class ConfiguredAuditTablesExistValidatorParameterizedTest
 {
 	private final ConnectionProviderInstance connectionProvider;
-	private final AuditTableInformation auditTableInformation;
 	private final ConfiguredAuditTablesExistValidator validator;
 	private final DatabaseQueries queries;
 	private final String expectedExceptionMessage;
+
+	@Rule
+	public ExpectedException expectedException = ExpectedException.none();
 
 	public ConfiguredAuditTablesExistValidatorParameterizedTest(@Nonnull String testName, @Nonnull AuditTableInformation auditTableInformation, @Nonnull List<String> allTableNames, @Nonnull List<String> tablesThatDoNotExist, @Nullable String expectedExceptionMessage) throws SQLException, DataSetException
 	{
@@ -42,8 +43,6 @@ public class ConfiguredAuditTablesExistValidatorParameterizedTest
 		validator = new ConfiguredAuditTablesExistValidator(connectionProvider, auditTableInformation.getAuditTableName(), auditTableInformation);
 
 		this.expectedExceptionMessage = expectedExceptionMessage;
-		this.auditTableInformation = auditTableInformation;
-
 		for (String tableName : allTableNames)
 		{
 			prepareMockedResults(tableName, tablesThatDoNotExist.contains(tableName) ? 0 : 1);
@@ -109,7 +108,7 @@ public class ConfiguredAuditTablesExistValidatorParameterizedTest
 				{"oneEntryTopContentTableDoesNotExist",        highestLevelEntry,    allTableNames, Collections.singletonList(contentTable1), highestLevelEntry + expectedExceptionMessageContentTable1},
 				{"twoEntriesTopContentTableDoesNotExist",      midLevelEntry,        allTableNames, Collections.singletonList(contentTable1), midLevelEntry + expectedExceptionMessageContentTable1},
 				{"threeEntriesTopContentTableDoesNotExist",    bottomLevelEntry,     allTableNames, Collections.singletonList(contentTable1), bottomLevelEntry + expectedExceptionMessageContentTable1},
-  
+
 				// All provided table names do not exist, this test proves that this validator will always provide the same results when provided with the same content.
 				{"threeEntriesTopContentAllTablesDoNotExist",  bottomLevelEntry,     allTableNames, allTableNames,                            bottomLevelEntry + expectedExceptionMessageAuditTable3},
 				//@formatter:on
@@ -132,19 +131,11 @@ public class ConfiguredAuditTablesExistValidatorParameterizedTest
 		}
 		else
 		{
-			try
-			{
-				validator.validateAuditTableAndContentTableExist();
-				fail("Expected a " + ValidationException.class.getSimpleName());
-			}
-			catch (ValidationException e)
-			{
-				assertEquals(expectedExceptionMessage, e.getMessage());
-			}
-		}
+			expectedException.expect(ValidationException.class);
+			expectedException.expectMessage(expectedExceptionMessage);
 
-		// Then
-		assertTrue(true);
+			validator.validateAuditTableAndContentTableExist();
+		}
 	}
 
 	private void prepareMockedResults(@Nonnull String tableName, int rowCount) throws SQLException, DataSetException
